@@ -12,8 +12,9 @@ class BoundingBox : public QRect
 public:
 	BoundingBox(QPoint point1, QPoint point2, int angle, bool null); //constructor
 	int getRotation() const;		//returns rotation
-	void setNull(bool null); //sets boxIsNull to isNull
-	bool boxIsNull() const; //returns value of boxIsNull
+	void setNull(bool null); //sets isNull to null
+	void toggleNull(); //toggles isNull
+	bool boxIsNull() const; //returns value of isNull
 	void report() const;
 private:
 	int rotation;		//rotation of image when rectangle was set

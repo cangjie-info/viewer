@@ -17,6 +17,11 @@ void BoundingBox::setNull(bool null)
 	isNull = null;
 }
 
+void BoundingBox::toggleNull()
+{
+	isNull = !isNull;
+}
+
 bool BoundingBox::boxIsNull() const
 {
 	return isNull;
