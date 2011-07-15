@@ -2,11 +2,12 @@
 #include <QDebug>
 #include "bounding_box.h"
 #include "box_list.h"
+#include "inscription_imgs.h"
 
 int main(int argc, char** argv)
 {
 	QApplication app(argc, argv);
-
+/*
 //test BoundingBox class
 
 	BoundingBox myBox(QPoint(10, 10), QPoint(20, 20), 45, false);
@@ -37,7 +38,16 @@ int main(int argc, char** argv)
 	qDebug() << "Box at 0 is" << (myBoxList.boxNullAt(0) ? "" : "not") << "null";
 	qDebug() << "testing boxCount(): number of boxes = " << myBoxList.boxCount();
 
+*/
 
+//test InscripitonImgs class
+
+	BoundingBox myBox(QPoint(10, 10), QPoint(20, 20), 45, false);
+	BoundingBox graphBox(QPoint(100, 100), QPoint(200, 200), 0, false);
+	InscriptionImgs myInscription(myBox);
+	for(int i=0; i<3; i++)
+		myInscription.insertBox(graphBox, 0);
+	myInscription.report();
 
 /*
 

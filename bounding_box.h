@@ -24,8 +24,8 @@ private:
 			//This if for cases where there is a graph in the transcription but 
 			//nothing visible in the surface image to have a bbox drawn around.
 			//the same functionality could have been achieved by setting QRect to zero
-			//but this seems simpler. It also means that null-ing a bbox is undoable, since 
-			//the value of QRect will preserve.
+			//but this seems simpler. It also means that null-ing a bbox could be made 
+			//undoable, since the value of QRect will preserve.
 };
 	
 #endif
