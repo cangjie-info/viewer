@@ -3,6 +3,7 @@
 #include "bounding_box.h"
 #include "box_list.h"
 #include "inscription_imgs.h"
+#include "surface_imgs.h"
 
 int main(int argc, char** argv)
 {
@@ -38,8 +39,6 @@ int main(int argc, char** argv)
 	qDebug() << "Box at 0 is" << (myBoxList.boxNullAt(0) ? "" : "not") << "null";
 	qDebug() << "testing boxCount(): number of boxes = " << myBoxList.boxCount();
 
-*/
-
 //test InscripitonImgs class
 
 	BoundingBox myBox(QPoint(10, 10), QPoint(20, 20), 45, false);
@@ -48,6 +47,19 @@ int main(int argc, char** argv)
 	for(int i=0; i<3; i++)
 		myInscription.insertBox(graphBox, 0);
 	myInscription.report();
+*/
+
+
+//test SurfaceImgs class
+
+	BoundingBox surfBox(QPoint(10, 10), QPoint(1000, 1000), 0, false);
+	SurfaceImgs mySurface(surfBox);
+	mySurface.insertInscr(BoundingBox(QPoint(30, 30), QPoint(70, 70), 30, false), 0);
+	InscriptionImgs* ptrInscr = mySurface.ptrInscrAt(0);
+	ptrInscr->BoundingBox::toggleNull();
+	ptrInscr->insertBox(BoundingBox(QPoint(40, 40), QPoint(50, 50), 0, false), 0);
+	ptrInscr->insertBox(BoundingBox(QPoint(55, 55), QPoint(65, 65), 30, false), 0);
+	mySurface.report();
 
 /*
 
