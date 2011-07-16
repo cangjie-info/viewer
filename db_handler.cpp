@@ -83,10 +83,10 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 {
 	if(!pCorpusQuery) //corpus has not been set
 		return false;
-	QString currentId = pCorpusQuery->value(0).toString();
+	QString currentSurfId = pCorpusQuery->value(0).toString();
 	//Query ec.surfaces 
 	QString surfaceQueryString("SELECT imageFile, x1, y1, x2, y2, rotation FROM surfaces WHERE id=");
-	surfaceQueryString += currentId;
+	surfaceQueryString += currentSurfId;
 	surfaceQueryString += ";";
 
 	QSqlQuery surfaceQuery(surfaceQueryString);
@@ -102,11 +102,53 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 	else
 	{
 		surf.setBox(	QPoint(surfaceQuery.value(1).toInt(), surfaceQuery.value(2).toInt()),
-						QPoint(surfaceQuery.value(3).toInt(), surfaceQuery.value(4).toInt()),
-						surfaceQuery.value(5).toInt(), false);
+							QPoint(surfaceQuery.value(3).toInt(), surfaceQuery.value(4).toInt()),
+							surfaceQuery.value(5).toInt(), false);
 	}
 
-	//query images
-	//for each image, query graphs.
+	//query ec.images
+	QString inscriptionQueryString("SELECT id, x1, y1, x2, y2, rotation FROM inscriptions WHERE surfaceId=");
+	inscriptionQueryString += currentSurfId;
+	inscriptionQueryString += ";";
+	QSqlQuery inscriptionQuery(inscriptionQueryString);
+	int currentInscrIndex = 0;
+	while(inscriptionQuery.next())
+	{
+		//add inscription bbox to list
+		if(inscriptionQuery.isNull(1))
+			surf.insertInscr(
+				BoundingBox(QPoint(0,0), QPoint(0,0), 0, true), 
+				currentInscrIndex);
+		else
+			surf.insertInscr(
+				BoundingBox(	
+					QPoint(inscriptionQuery.value(1).toInt(), inscriptionQuery.value(2).toInt()),
+					QPoint(inscriptionQuery.value(3).toInt(), inscriptionQuery.value(4).toInt()),
+					inscriptionQuery.value(5).toInt(), false),
+				currentInscrIndex );
+		//for each inscription, query graphs.
+		QString currentInscrId = inscriptionQuery.value(0).toString();
+		QString graphQueryString("SELECT x1, y1, x2, y2, rotation FROM inscriptionGraphs WHERE inscriptionId=");
+		graphQueryString += currentInscrId;
+		graphQueryString += ";";
+		QSqlQuery graphQuery(graphQueryString);
+		while(graphQuery.next())
+		{
+			//add graph bbox to inscription
+			if(graphQuery.isNull(0)) //null graph box
+				surf.ptrInscrAt(currentInscrIndex)->insertBox(
+					BoundingBox(
+						QPoint(0,0), QPoint(0,0), 0, true),
+					surf.ptrInscrAt(currentInscrIndex)->boxCount());
+			else //non-null graph box
+				surf.ptrInscrAt(currentInscrIndex)->insertBox(
+					BoundingBox(
+						QPoint(graphQuery.value(1).toInt(), graphQuery.value(2).toInt()),
+						QPoint(graphQuery.value(3).toInt(), graphQuery.value(4).toInt()),
+						graphQuery.value(5).toInt(), false),
+					surf.ptrInscrAt(currentInscrIndex)->boxCount());
+		}		
+		currentInscrIndex++;
+	}
 	return true;
 }
