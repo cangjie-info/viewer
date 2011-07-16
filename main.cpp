@@ -4,55 +4,47 @@
 #include "box_list.h"
 #include "inscription_imgs.h"
 #include "surface_imgs.h"
+#include "db_handler.h"
 
 int main(int argc, char** argv)
 {
 	QApplication app(argc, argv);
-/*
-//test BoundingBox class
 
-	BoundingBox myBox(QPoint(10, 10), QPoint(20, 20), 45, false);
-	myBox.report();
-	qDebug() << "testing member function getRotation(): returns" << myBox.getRotation();
-	qDebug() << "testing member function setNull() ...";
-	myBox.setNull(true);
-	qDebug() << "testing member function boxIsNull(): returns" << myBox.boxIsNull();
-	myBox.report();
+	Q_INIT_RESOURCE(viewer); //initializes resource file for viewer
+							//resource file includes icons etc.
+							//should be called from main()
 
-//test BoxList class
+	//create class that connects to db and handles all queries
+	//NO! THIS SHOULD GO INSIDE THE VIEWER CLASS
 
-	BoxList myBoxList;
-	qDebug() << "testing insertBox(...)";
-	for (int i=0; i<3; i++)
-		myBoxList.insertBox(myBox, 0);
-	myBoxList.report();
-	qDebug() << "testing deleteBox(...)";
-	myBoxList.deleteBox(3);
-	myBoxList.deleteBox(2);
-	myBoxList.deleteBox(0);
-	myBoxList.report();
-	qDebug() << "testing toggleNull(...)";
-	myBoxList.toggleNull(0);
-	qDebug() << "testing boxAt(...)";
-	myBoxList.boxAt(0).report();
-	qDebug() << "testing boxNullAt(...)";
-	qDebug() << "Box at 0 is" << (myBoxList.boxNullAt(0) ? "" : "not") << "null";
-	qDebug() << "testing boxCount(): number of boxes = " << myBoxList.boxCount();
+//test DbHandler class
+	DbHandler dbHandler;
+	if(!dbHandler.connect())
+	{
+		return 1;
+	}
+	else 
+	{
+		qDebug() << "successfully connected to db.";
+	}
 
-//test InscripitonImgs class
+	dbHandler.setCorpus();
+	dbHandler.nextSurface();
+	dbHandler.nextSurface();
+	dbHandler.nextSurface();
+	dbHandler.nextSurface();
+	dbHandler.previousSurface();
+	qDebug() << "position in corpus =" << dbHandler.getPositionInCorpus()
+		<< "/" << dbHandler.getCorpusSize();
 
-	BoundingBox myBox(QPoint(10, 10), QPoint(20, 20), 45, false);
-	BoundingBox graphBox(QPoint(100, 100), QPoint(200, 200), 0, false);
-	InscriptionImgs myInscription(myBox);
-	for(int i=0; i<3; i++)
-		myInscription.insertBox(graphBox, 0);
-	myInscription.report();
-*/
-
+	SurfaceImgs surf;
+	dbHandler.readSurface(surf);
+	surf.report();
 
 //test SurfaceImgs class
-
+/*
 	BoundingBox surfBox(QPoint(10, 10), QPoint(1000, 1000), 0, false);
+	surfBox.setBox(QPoint(333, 333), QPoint(666, 666), 180, true);
 	SurfaceImgs mySurface(surfBox);
 	mySurface.insertInscr(BoundingBox(QPoint(30, 30), QPoint(70, 70), 30, false), 0);
 	InscriptionImgs* ptrInscr = mySurface.ptrInscrAt(0);
@@ -60,45 +52,6 @@ int main(int argc, char** argv)
 	ptrInscr->insertBox(BoundingBox(QPoint(40, 40), QPoint(50, 50), 0, false), 0);
 	ptrInscr->insertBox(BoundingBox(QPoint(55, 55), QPoint(65, 65), 30, false), 0);
 	mySurface.report();
-
-/*
-
-	InscriptionGraph graph1(myBox, false, 1, 1);
-	InscriptionGraph graph2(myBox, true, 1, 1);
-	InscriptionGraph graph3(myBox, false, 0, 0);
-
-	Inscription myInscr(BoundingBox(QPoint(0,0), QPoint(0,0), 0), false);
-	for(int i = 0; i<5; i++)
-	{
-		myInscr.insertGraph(graph2, 0);
-	}
-	myInscr.report(); //there should be 5 graphs.
-
-	for(int j = 0; j<5; j++)
-	{
-		myInscr.insertGraphBox(myBox, false, 0);
-	}
-	
-	myInscr.report(); //there should be 5 graphs.
-
-	for(int k = 0; k<5; k++)
-	{
-		myInscr.insertGraphBox(myBox, false, 0);
-	}
-	myInscr.report(); //there should now be 10 graphs.
-
-	for(int l=0; l<11; l++)
-	{
-		myInscr.deleteGraphBox(0);
-	}
-	myInscr.report(); // there should be 5 graphs all with null boxes
-
-	for(int m=0; m<10; m++)
-	{
-		myInscr.deleteGraph(0);
-	}
-	myInscr.report(); //graphList should be empty
 */
-
 	return app.exec(); 
 }

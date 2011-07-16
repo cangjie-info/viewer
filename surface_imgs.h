@@ -9,13 +9,16 @@
 //class has no access to transcriptional info
 
 #include <QList>
+#include <QString>
 #include "bounding_box.h"
 #include "inscription_imgs.h"
 
 class SurfaceImgs : public BoundingBox
 {
 public:
+	SurfaceImgs(); //constructor
 	SurfaceImgs(BoundingBox surfBox); //constructor
+	void setImageFile(QString path);
 	void insertInscr(BoundingBox inscrBox, int index); //inserts an inscription 
 				//at index. does nothing if index oor
 	void deleteInscr(int index); //deletes inscription at index.
@@ -25,6 +28,7 @@ public:
 				// to the insription at index. returns NULL pointer if index oor
 	void report() const;
 private:
+	QString imageFile; //path to image file in repository
 	QList<InscriptionImgs> inscrImgsList;
 };
 #endif

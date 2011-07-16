@@ -1,10 +1,20 @@
 #include <QDebug>
 #include "surface_imgs.h"
 
+SurfaceImgs::SurfaceImgs()
+{ 
+	//constructor 
+}
+
 SurfaceImgs::SurfaceImgs(BoundingBox surfBox)
 	: BoundingBox(surfBox)
 {
 	//constructor
+}
+
+void SurfaceImgs::setImageFile(QString path)
+{
+	imageFile = path;
 }
 
 void SurfaceImgs::insertInscr(BoundingBox inscrBox, int index)
