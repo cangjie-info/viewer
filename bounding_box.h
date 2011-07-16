@@ -10,7 +10,10 @@ class BoundingBox : public QRect
 {
 	//	Q_OBJECT  -  this generated an error 
 public:
+	BoundingBox(); //constructor
 	BoundingBox(QPoint point1, QPoint point2, int angle, bool null); //constructor
+	void setBox(QPoint point1, QPoint point2, int angle, bool null);
+		//set all member variable of box
 	int getRotation() const;		//returns rotation
 	void setNull(bool null); //sets isNull to null
 	void toggleNull(); //toggles isNull

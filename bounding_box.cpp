@@ -1,10 +1,23 @@
 #include <QDebug>
 #include "bounding_box.h"
 
+BoundingBox::BoundingBox()
+{
+	//constructor
+}
+
 BoundingBox::BoundingBox(QPoint point1, QPoint point2, int angle, bool null) 
 	: QRect(point1, point2), rotation(angle), isNull(null)
 {
 	//constructor
+}
+
+void BoundingBox::setBox(QPoint point1, QPoint point2, int angle, bool null)
+{
+	setTopLeft(point1);
+	setBottomRight(point2);
+	rotation = angle;
+	isNull = null;
 }
 
 int BoundingBox::getRotation() const
