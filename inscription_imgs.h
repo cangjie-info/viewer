@@ -24,6 +24,7 @@
 class InscriptionImgs : public BoxList, public BoundingBox
 {
 public:
+	InscriptionImgs(); //constructor
 	InscriptionImgs(BoundingBox inscrBox); //constructor
 	void report() const;
 private:

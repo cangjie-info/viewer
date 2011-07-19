@@ -1,17 +1,11 @@
 #include "viewer.h"
-#include "imagelabel.h"
-#include "dbhandler.h"
+// #include "imagelabel.h"
 #include <QtGui>
-//DELETE #include <QSqlQuery>
 #include <QDebug>
 #include <QMessageBox>
 
-Viewer::Viewer(/* DELETE DbHandler* db */)
+Viewer::Viewer()
 {
-	originalImage = QImage(); //initialize to null image
-	surfaceImage = QImage();
-	currentImage = QImage();
-
 	//set up connection with db
 	db = DbHandler(); 
 	if(db.connect())
@@ -24,48 +18,20 @@ Viewer::Viewer(/* DELETE DbHandler* db */)
 	else
 		qDebug() << "No corpus found.";
 
-	imageLabel = new ImageLabel(this, &currentSurface, &currentImage, &mode);
-	
-	setMode(SURFACE);
-
-/* MOVE CODE TO DBHANDLER
-	surfaceIdQuery = new QSqlQuery; //delete on close
-	surfaceIdQuery->exec("SELECT id FROM hdTextSurfaces;"); //we may need to add ORDER BY id
-qDebug() << "SELECT id 	FROM textSurfaces;";
-*/
-	surfaceModified = false;
+	imageLabel = new ImageLabel(this, &surf);
 	advance(); // to move to the first surface and display it
 
 	createActions();
 	createMenus();
 	createToolBars();
 	createStatusBar();
-
 	scrollArea = new QScrollArea(this);
 	scrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
 	scrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
-
 	setCentralWidget(scrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
 	showMaximized();
 }
 
-void Viewer::setMode(Mode newMode)
-{
-	mode = newMode;
-
-/* DELETE imageLabel->lock(); //no edits allowed till unlocked
-	switch (mode)
-	{
-	case SURFACE:
-		imageLabel->setMaxListLength(1);
-		break;
-	case INSCRIPTION:
-	case GRAPH:
-		imageLabel->setMaxListLength(1000);
-		break;
-	}
-	END DELETE */
-}
 
 /*
 int Viewer::graphsFromDb() //return zero if the currentBoxId 
@@ -216,7 +182,7 @@ qDebug() << updateGraphQueryString;
 				//we could change this subsequently
 					//so that new row are added to ec.inscriptionGraphs instead
 			{
-				break; //********** NB!! ***********
+				break; //NB!! ***********
 			}
 		}
 		//fill remaining rows with NULL
@@ -279,7 +245,7 @@ qDebug() << updateQueryString;
 				//we could change this subsequently 
 					//so that new rows are added to the table instead.
 			{
-				break; //******* NB!!! ********
+				break; //NB!!! ********
 			}
 		}
 		//fill the remaining rows with NULL
@@ -296,104 +262,6 @@ qDebug() << updateQueryString;
 qDebug() << queryString;
 			updateInscriptions.exec(queryString);
 		}
-	}
-}
-
-//TODO insert code in modeDown() to set currentInscriptionId and currentInscriptionBoxIndex
-void Viewer::modeDown()
-{
-	//assume surfaceIdQuery is already valid.
-	switch(mode)
-	{
-	case SURFACE:
-qDebug() << "modeDown() - SURFACE > INSCRIPTION";
-		if(!boxList.isEmpty()) //nothing to move down into if list is empty
-		{
-			surfaceToDb(); //save surface to db 
-							//(does nothing if Image Label is locked)
-			BoundingBox surfaceBox = boxList.first(); 
-							//the one and only box in the list
-			//rotate copy of image by appropriate amount
-			QTransform trans; //identity matrix
-			trans.rotate(boxList.first().getRotation());
-			QRect selection = boxList.first(); //TODO boxList.first() >> surfaceBox
-			originalImage = currentImage; //do we need this?
-			currentImage = (originalImage.transformed(trans)) . copy (selection);
-					//image in ImageLabel should be updated with next paint event.
-			surfaceList = boxList; //DO WE NEED THIS? JUST QUERY EVERYTHING IF IT'S QUICK ENOUGH
-			inscriptionsFromDb();
-			setMode(INSCRIPTION);
-			imageLabel->refresh();
-		}
-		break;
-	case INSCRIPTION:
-qDebug() << "modeDown() - INSCRIPTION > GRAPH";
-		if(!boxList.isEmpty()) //if something to move down to
-		{
-			inscriptionsToDb(); //does nothing if ImageLabel is locked
- 			inscriptionList = boxList;
-			currentInscriptionBoxIndex = imageLabel->getCurrentBoxIndex();
-qDebug() << "currentInscriptionBoxIndex = " << currentInscriptionBoxIndex;
-			BoundingBox inscriptionBox = boxList.at(currentInscriptionBoxIndex);
-			int maybeInscriptionId = graphsFromDb();
-			if(maybeInscriptionId>0)
-			{  //there is an inscription corresponding to the current box
-				//get current box
-				currentInscriptionId = maybeInscriptionId;
-				//DELETE ME
-				//ERROR: boxList is already the graph box list!! //BoundingBox inscriptionBox = boxList.at(currentInscriptionBoxIndex);
-				QTransform trans; //identity matrix
-				trans.rotate(inscriptionBox.getRotation());
-				QRect selection = inscriptionBox;
-				surfaceImage = currentImage;
-				currentImage = (surfaceImage.transformed(trans)) . copy (selection);
-					//image in ImageLabel will be updated with next paint event
-				//ERROR: too late, boxList is already graph!!//  inscriptionList = boxList;
-				setMode(GRAPH);
-				imageLabel->refresh();
-			}
-			else
-			{	//do nothing - there is no inscrption corresponding to current box
-				//note that this will never happen if inscriptionstToDb() includes an
-				//INSERT query
-				QMessageBox msgBox;
-				msgBox.setText("There is no documented inscription corresponding to the current box.");
-				msgBox.exec();
-			}
-		}
-		break;
-	case GRAPH:
-	//do nothing
-		break;
-	}
-}
-
-void Viewer::modeUp()
-{
-	switch(mode)
-	{
-	case SURFACE:
-		//do nothing
-		break;
-	case INSCRIPTION:
-qDebug() << "modeUp() - INSCRIPTION > SURFACE";
-		inscriptionsToDb();
-		boxList = surfaceList; //retrieve list of (one) surface boxes
-		currentImage = originalImage; //retrieve image
-		setMode(SURFACE);
-		imageLabel->refresh();
-		break;
-	case GRAPH:
-qDebug() << "modeUp() - GRAPH > INSCRIPTION";
-		graphsToDb();
-		boxList = inscriptionList; //retrieve the list of inscription boxes
-		currentImage = surfaceImage; //retrieve surface image
-		//set box index back where it was
-qDebug() << "currentInscriptionBoxIndex = " << currentInscriptionBoxIndex;
-		setMode(INSCRIPTION);
-		imageLabel->refresh();
-		imageLabel->setCurrentBoxIndex(currentInscriptionBoxIndex);
-		break;
 	}
 }
 
@@ -460,47 +328,37 @@ qDebug() << fileName;
 qDebug() << "Bad query:" << queryString << "\n";
 	}
 }
+*/
 
 void Viewer::advance()
 {
-	if(mode==SURFACE)
+	if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
 	{
-		surfaceToDb(); //save current state (does nothing if we are before first record)
-		setMode(SURFACE); //always start new surface in this mode
-		if(surfaceIdQuery->next())
-		{
-			surfaceFromDb(); //load the next text surface from the db, and set image
-		}
-		else //if we have gone beyond the end of the record set
-		{
-			surfaceIdQuery->last(); //move back to last
-		}
+		//TODO db.writeSurface(surf);
+		db.nextSurface();
+		db.readSurface(surf);
+		imageLabel->newSurf();
 	}
+	//else do nothing
 }
 
 void Viewer::back()
 {
-	if(mode==SURFACE)
+	if(imageLabel->getMode() == ImageLabel::SURFACE)
 	{
-		surfaceToDb(); //save current state
-		setMode(SURFACE); //always start new surface in this mode
-		if(surfaceIdQuery->previous()) //move to previous surface
-		{
-			surfaceFromDb();  //load the previous text surface form the db, and update image
-		}
-		else // if we have gone back before the first record
-		{
-			surfaceIdQuery->first(); //move back to first
-		}
+		//TODO db.writeSurface(surf) //save current state
+		db.previousSurface();
+		db.readSurface(surf);
+		imageLabel->newSurf();
 	}
 }
-	
+
 void Viewer::createActions()
 {
 
-	saveThumbnailsAction = new QAction(tr("&Save thumbnails"), this);
-	saveThumbnailsAction->setShortcut(tr("Ctrl+S"));
-	connect(saveThumbnailsAction, SIGNAL(triggered()), imageLabel, SLOT(saveThumbnails()));
+//	saveThumbnailsAction = new QAction(tr("&Save thumbnails"), this);
+//	saveThumbnailsAction->setShortcut(tr("Ctrl+S"));
+//	connect(saveThumbnailsAction, SIGNAL(triggered()), imageLabel, SLOT(saveThumbnails()));
 
 	exitAction = new QAction(QIcon(":/icons/window-close.png"), tr("E&xit"), this);
 	exitAction->setShortcut(tr("Ctrl+Q"));
@@ -516,11 +374,11 @@ void Viewer::createActions()
 
 	modeDownAction = new QAction(tr("Mode Down"), this);
 	modeDownAction->setShortcut(tr("Ctrl+Space"));
-	connect(modeDownAction, SIGNAL(triggered()), this, SLOT(modeDown()));
+	connect(modeDownAction, SIGNAL(triggered()), imageLabel, SLOT(modeDown()));
 
 	modeUpAction = new QAction(tr("Mode Up"), this);
 	modeUpAction->setShortcut(tr("Escape"));
-	connect(modeUpAction, SIGNAL(triggered()), this, SLOT(modeUp()));
+	connect(modeUpAction, SIGNAL(triggered()), imageLabel, SLOT(modeUp()));
 
 	unlockAction = new QAction(tr("&Unlock"), this);
 	unlockAction->setShortcut(tr("Ctrl+U"));
@@ -571,7 +429,7 @@ void Viewer::createMenus()
 {
 	fileMenu = menuBar()->addMenu(tr("&File"));
 	fileMenu->addAction(exitAction);
-	fileMenu->addAction(saveThumbnailsAction);
+//	fileMenu->addAction(saveThumbnailsAction);
 
 	editMenu = menuBar()->addMenu(tr("&Edit"));
 	editMenu->addAction(boxForwardAction);
@@ -595,7 +453,6 @@ void Viewer::createMenus()
 
 	viewMenu = menuBar()->addMenu(tr("&View"));
 	viewMenu->addAction(toggleIndexNumbersAction);
-
 }
 
 void Viewer::createToolBars()
@@ -614,6 +471,3 @@ void Viewer::createStatusBar()
 	statusBar()->setFont(statusBarFont);
 	statusBar()->showMessage(tr("This is the status bar"));
 }
-
-*/
-

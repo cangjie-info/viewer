@@ -19,11 +19,15 @@ public:
 	SurfaceImgs(); //constructor
 	SurfaceImgs(BoundingBox surfBox); //constructor
 	void setImageFile(QString path);
+	QString getImageFile();	//reuturns path to image from text_imgs/
 	void insertInscr(BoundingBox inscrBox, int index); //inserts an inscription 
 				//at index. does nothing if index oor
 	void deleteInscr(int index); //deletes inscription at index.
 				//does nothing if index oor
+	void deleteAllInscriptions(); //deletes all inscriptions
 	int inscriptionCount() const; //returns number of inscripitons on surface
+	InscriptionImgs inscrAt(int index) const; //returns (value) the inscription at index
+			//returns a zero inscripion if index oor.
 	InscriptionImgs* ptrInscrAt(int index);  //returns a pointer
 				// to the insription at index. returns NULL pointer if index oor
 	void report() const;

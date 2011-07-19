@@ -17,6 +17,11 @@ void SurfaceImgs::setImageFile(QString path)
 	imageFile = path;
 }
 
+QString SurfaceImgs::getImageFile()
+{
+	return imageFile;
+}
+
 void SurfaceImgs::insertInscr(BoundingBox inscrBox, int index)
 {
 	if(index < 0 || index > inscrImgsList.count())
@@ -37,9 +42,24 @@ void SurfaceImgs::deleteInscr(int index)
 	inscrImgsList.removeAt(index);
 }
 
+void SurfaceImgs::deleteAllInscriptions()
+{
+	inscrImgsList.clear();
+}
+
 int SurfaceImgs::inscriptionCount() const
 {
 	return inscrImgsList.count();
+}
+
+InscriptionImgs SurfaceImgs::inscrAt(int index) const
+{
+	if(index < 0 || index >= inscrImgsList.count())
+	{
+		qDebug() << "index oor in SurfaceInscImgs::inscrAt";
+		return InscriptionImgs();
+	}
+	return inscrImgsList.at(index);
 }
 
 InscriptionImgs* SurfaceImgs::ptrInscrAt(int index) 

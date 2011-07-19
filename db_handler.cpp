@@ -143,9 +143,9 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 			else //non-null graph box
 				surf.ptrInscrAt(currentInscrIndex)->insertBox(
 					BoundingBox(
-						QPoint(graphQuery.value(1).toInt(), graphQuery.value(2).toInt()),
-						QPoint(graphQuery.value(3).toInt(), graphQuery.value(4).toInt()),
-						graphQuery.value(5).toInt(), false),
+						QPoint(graphQuery.value(0).toInt(), graphQuery.value(1).toInt()),
+						QPoint(graphQuery.value(2).toInt(), graphQuery.value(3).toInt()),
+						graphQuery.value(4).toInt(), false),
 					surf.ptrInscrAt(currentInscrIndex)->boxCount());
 		}		
 		currentInscrIndex++;

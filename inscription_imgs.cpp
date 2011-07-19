@@ -1,6 +1,12 @@
 #include <QDebug>
 #include "inscription_imgs.h"
 
+
+InscriptionImgs::InscriptionImgs()
+{
+	//constructor
+}
+
 InscriptionImgs::InscriptionImgs(BoundingBox inscrBox)
 	: BoundingBox(inscrBox)
 {

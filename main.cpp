@@ -1,10 +1,6 @@
 #include <QApplication>
 #include <QDebug>
-#include "bounding_box.h"
-#include "box_list.h"
-#include "inscription_imgs.h"
-#include "surface_imgs.h"
-#include "db_handler.h"
+#include "viewer.h"
 
 int main(int argc, char** argv)
 {
@@ -13,10 +9,10 @@ int main(int argc, char** argv)
 	Q_INIT_RESOURCE(viewer); //initializes resource file for viewer
 							//resource file includes icons etc.
 							//should be called from main()
-
-	//create class that connects to db and handles all queries
-	//NO! THIS SHOULD GO INSIDE THE VIEWER CLASS
-
+	
+	Viewer viewer;
+	viewer.show();
+/*
 //test DbHandler class
 	DbHandler dbHandler;
 	if(!dbHandler.connect())
@@ -42,7 +38,6 @@ int main(int argc, char** argv)
 	surf.report();
 
 //test SurfaceImgs class
-/*
 	BoundingBox surfBox(QPoint(10, 10), QPoint(1000, 1000), 0, false);
 	surfBox.setBox(QPoint(333, 333), QPoint(666, 666), 180, true);
 	SurfaceImgs mySurface(surfBox);

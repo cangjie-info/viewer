@@ -19,6 +19,8 @@ public:
 		//queries ec.inscribedSurfaces using corpusQuery
 		//to get a result set consisting of id numbers for surfaces
 		//the default is to select all surfaces in the table
+		//if corpus has been set, position will be before the first record
+		//must use nextSurface() before attempting to read
 		//TODO variable corpora
 	bool nextSurface();
 		//move to next record in corpusQuery

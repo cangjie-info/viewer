@@ -7,10 +7,12 @@
 //MAYBE? base class of Image class?
 //Contains a QList of bounding boxes 
 
+//TODO refactor: inherit QList<BoundingBox>
+
 #include "bounding_box.h"
 #include <QList>
 
-class BoxList
+class BoxList : public QList<BoundingBox>
 {
 public:
 	BoxList(); //constructor
@@ -26,10 +28,6 @@ public:
 		//true if oor.
 	int boxCount() const; //number of boxes in list
 	void report() const;
-
-private:
-	//variables
-	QList<BoundingBox> boxList;
 };
 
 #endif

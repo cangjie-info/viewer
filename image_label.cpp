@@ -1,4 +1,4 @@
-#include "imagelabel.h"
+#include "image_label.h"
 #include <QRubberBand>
 #include <QMouseEvent>
 #include <QRect>
@@ -11,21 +11,33 @@
 #include <QDesktopWidget>
 #include <QApplication>
 
-ImageLabel::ImageLabel(QWidget* parent, QList<BoundingBox>* pBoxList, const QImage* currentImage) //constructor
-	: QLabel(parent), rubberBand(NULL), 
-		zoom(1), rotation(0), 
-				pBoxList(pBoxList), image(currentImage)
+ImageLabel::ImageLabel(QWidget* parent, SurfaceImgs* surface) //constructor
+	: 	QLabel(parent), surf(surface), rubberBand(NULL)
 {
 	setAlignment(Qt::AlignTop | Qt::AlignLeft); 	//label contents aligned top left
-	refresh();
+	mode = SURFACE;
 }
 
-void ImageLabel::refresh()
+void ImageLabel::newSurf()
 {
-	transformedImage = *image;
+	QString imageFile = surf->getImageFile();
+	imageFile.prepend("/home/ads/repository/text_imgs/");
+	originalImage = QImage(imageFile); // load image file from disk.
+	currentImage = originalImage;
+	currentBoxIndex=0; //in SURFACE mode, so this is the only possible value
+		//remember that there may not actually be any boxes at all
+	locked = true;
+	surfaceModified = false;
+	mode = SURFACE;
+	reset();
+}
+
+void ImageLabel::reset()
+{
 	zoom = 1;
 	rotation = 0;
 	indexNumbersVisible = false;
+	transformedImage = currentImage;
 	const QRect res = QApplication::desktop()->availableGeometry();
 	while(transformedImage.height() > res.height() || 
 			transformedImage.width() > res.width())
@@ -35,43 +47,76 @@ void ImageLabel::refresh()
 	//in case no resizing took place, we still need to ensure that 
 	//private member transform is updated, so...
 	transformImage();
-	if(pBoxList->isEmpty())
-		currentBoxIndex = -1;
-	else
-		currentBoxIndex = 0;
 	update();
 }
-void ImageLabel::setCurrentBoxIndex(int index)
+
+ImageLabel::Mode ImageLabel::getMode()
 {
-	if(index<0 || index>=pBoxList->size())
+	return mode;
+}
+
+void ImageLabel::modeDown()
+{
+	switch(mode)
 	{
-		return;
+	case GRAPH:
+		break;
+	case SURFACE:
+		if(!surf->boxIsNull())
+		{
+			mode = INSCRIPTION;
+			QTransform trans; //identity matrix
+			trans.rotate(surf->getRotation()); //rotation of surface bounding box
+			QRect selection = *surf; //rectangle of surface bounding box
+			currentImage = (originalImage.transformed(trans)) . copy (selection);
+					//set current image to be the rotated surface bounding box
+			if(surf->inscriptionCount() > 0)
+				currentBoxIndex = 0;
+			else
+				currentBoxIndex = -1;
+			reset();
+		}
+		break;
+	case INSCRIPTION:
+		if(surf->inscriptionCount() > 0)
+		{
+			mode = GRAPH;
+ 			QTransform trans;
+			trans.rotate(surf->inscrAt(currentInscrIndex).getRotation());
+			QRect selection = surf->inscrAt(currentInscrIndex);
+			surfaceImage = currentImage;
+			currentImage = surfaceImage.transformed(trans) . copy(selection);
+			currentInscrIndex = currentBoxIndex;
+			if(surf->ptrInscrAt(currentInscrIndex)->boxCount() > 0)
+				currentBoxIndex = 0;
+			else
+				currentBoxIndex = -1;
+			reset();
+		}
+		break;
 	}
-	else
+}
+
+void ImageLabel::modeUp()
+{
+	switch(mode)
 	{
-		currentBoxIndex=index;
-		return;
+	case SURFACE:
+		//do nothing
+		break;
+	case INSCRIPTION:  //from INSCRIPTION to SURFACE
+		currentImage = originalImage; //retrieve image
+		mode = SURFACE;
+		currentBoxIndex = 0;
+		reset();
+		break;
+	case GRAPH: //from GRAPH to INSCRIPTION
+		currentBoxIndex = currentInscrIndex;
+		currentImage = surfaceImage; //retrieve surface image
+		mode = INSCRIPTION;
+		reset();
+		break;
 	}
-}
-
-void ImageLabel::setMaxListLength(int max)
-{
-	maxListLength = max;
-}	
-
-void ImageLabel::lock()
-{
-	locked = true;
-}
-
-void ImageLabel::unlock()
-{
-	locked = false;
-}
-
-bool ImageLabel::isLocked()
-{
-	return locked;
 }
 
 void ImageLabel::toggleIndexNumbers()
@@ -80,43 +125,81 @@ void ImageLabel::toggleIndexNumbers()
 	update(); //to ensure that they become (in)visible immediately
 }
 
-int ImageLabel::getCurrentBoxIndex()
-{
-	return currentBoxIndex;
-}
-
 void ImageLabel::advanceCurrentBoxIndex()
 {
-	currentBoxIndex++;	//advance index by one
-	if(currentBoxIndex >= pBoxList->size())
-		currentBoxIndex = 0;	//wrap around if necessary
-	update();
+	switch(mode)
+	{
+	case SURFACE:
+		//do nothing
+		break;
+	case INSCRIPTION:		
+		currentBoxIndex++;	//advance index by one
+		if(currentBoxIndex >= surf->inscriptionCount())
+			currentBoxIndex = 0;	//wrap around if necessary
+		update();
+	case GRAPH:
+		currentBoxIndex++;
+		if(currentBoxIndex >= surf->ptrInscrAt(currentInscrIndex)->count())
+			currentBoxIndex = 0;
+		break;
+	}
+		update();
 }
 
 void ImageLabel::reverseCurrentBoxIndex()
 {
-	currentBoxIndex--; //go back one
-	if(currentBoxIndex < 0)	//wrap around if necessary
-		currentBoxIndex = pBoxList->size() - 1;
-	update(); //so that that current box is visible
+	switch(mode)
+	{
+	case SURFACE:
+		//do nothing
+		break;
+	case INSCRIPTION:
+		currentBoxIndex--; //go back one
+		if(currentBoxIndex < 0)	//wrap around if necessary
+			currentBoxIndex = surf->inscriptionCount() - 1;
+		update(); //so that that current box is visible
+	case GRAPH:
+		currentBoxIndex++;
+		if(currentBoxIndex < 0)
+			currentBoxIndex = surf->ptrInscrAt(currentInscrIndex)->count();
+		break;
+	}
+		update();
 }
 
 void ImageLabel::deleteCurrentBox()
-//TODO: if an inscription or surface box is deleted
+//if an inscription or surface box is deleted
 //all boxes below it in the hierarchy should be deleted too
 {
-	if(pBoxList->isEmpty() || locked)
-	{
+	if(locked || currentBoxIndex == -1)
 		return;
-	}
-	else
+	switch(mode)
 	{
-		pBoxList->removeAt(currentBoxIndex);
+	case SURFACE:
+		surf->setNull(true);
+		surf->deleteAllInscriptions(); //warn first?
+		currentBoxIndex = -1;
+		break;
+	case INSCRIPTION:
+		surf->deleteInscr(currentBoxIndex);
 		currentBoxIndex--;
-		if(currentBoxIndex == -1 && pBoxList->isEmpty()==false)
+		if(currentBoxIndex == -1 && surf->inscriptionCount() > 0)
 			currentBoxIndex = 0;
-		update();
+		break;
+	case GRAPH:
+		surf->ptrInscrAt(currentInscrIndex)->deleteBox(currentBoxIndex);
+		currentBoxIndex--;
+		if(currentBoxIndex == -1 && 
+					surf->ptrInscrAt(currentInscrIndex)->count() > 0)
+			currentBoxIndex = 0;
+		break;
 	}
+	update();
+}
+
+void ImageLabel::unlock()
+{
+	locked = false;
 }
 
 void ImageLabel::paintEvent(QPaintEvent* event)
@@ -134,11 +217,28 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 	font.setPixelSize(30); //TODO make font size dependent on resolution
 	painter.setFont(font);
 	painter.setPen(Qt::red);
+	//make a list of bounding boxes according to current mode
+	BoxList currentBoxList; //this is a list of all boxes, null and non-null
+	currentBoxList.clear();
+	switch(mode)
+	{
+	case SURFACE:
+		currentBoxList.append(*surf); //list of one item, consting of the surface bounding box
+		break;
+	case INSCRIPTION:
+		for(int i=0; i < surf->inscriptionCount(); i++)
+			currentBoxList.insertBox(surf->inscrAt(i), i);
+		break;
+	case GRAPH:
+		for(int i=0; i < surf->inscrAt(i).count(); i++)
+			currentBoxList.insertBox(surf->inscrAt(currentInscrIndex).at(i), i);
+		break;
+	}
 	//iterate through the list of bounding boxes
-	for (int i=0; i<pBoxList->size(); i++)
+	for (int i=0; i<currentBoxList.size(); i++)
 	{
 qDebug() << "now drawing box " << i;
-		BoundingBox currentBox = pBoxList->at(i);
+		BoundingBox currentBox = currentBoxList.at(i);
 
 		//the bounding boxes need to be rotated and scaled
 		QTransform boxTransform; //identity matrix
@@ -148,11 +248,13 @@ qDebug() << "now drawing box " << i;
 		//(note: we don't need to worry about scale, as we took account of that
 		//when the bounding box was created)
 		boxTransform.rotate(currentBox.getRotation());
-		boxTransform = QImage::trueMatrix(boxTransform, image->width(), image->height());
+		boxTransform = QImage::trueMatrix(boxTransform, 
+						currentImage.width(), currentImage.height());
 		boxTransform = boxTransform.inverted();
 	
 		//then we compound the above matrix with the current transformation of the image
-		QTransform imageTrueTransform = QImage::trueMatrix(transform, image->width(), image->height());
+		QTransform imageTrueTransform = QImage::trueMatrix(transform, 
+						currentImage.width(), currentImage.height());
 		painter.setWorldTransform(boxTransform * imageTrueTransform);
 		//now draw the box
 		//pen color is red; set the pen-color to green if this is the current box.
@@ -164,7 +266,8 @@ qDebug() << "now drawing box " << i;
 		//and add an (optional) index number
 		if(indexNumbersVisible)
 		{
-			painter.drawText(currentBox.left(), currentBox.top(), 50, 50, Qt::AlignBottom,  QString("%1").arg(i));
+			painter.drawText(currentBox.left(), currentBox.top(), 50, 50, 
+						Qt::AlignBottom,  QString("%1").arg(i));
 		}
 		//return pen color to red (might be green)
 		painter.setPen(Qt::red);
@@ -180,7 +283,7 @@ void ImageLabel::transformImage()
 	transform.reset(); //set to identity matrix
 	transform.rotate(rotation);	//set matrix
 	transform.scale(zoom, zoom);
-	transformedImage = image->transformed(transform);		//make rotated version of image
+	transformedImage = currentImage.transformed(transform);		//make rotated version of image
 }	
 
 //mouse down, start rubberband
@@ -209,7 +312,6 @@ void ImageLabel::mouseMoveEvent(QMouseEvent* event)
 void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 {
 	rubberBand->hide();
-
 	//get bBox, accounting for rotation and zoom
 	QRect rect(origin/zoom, event->pos()/zoom);
 	rect = rect.normalized(); //topLeft etc. are not reliable without this
@@ -219,18 +321,23 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 		update(); //to remove the mess
 		return;
 	}
-	BoundingBox bBox(rect.topLeft(), rect.bottomRight(), rotation);
-
-	//remove any list items that would make list too long
-	while(pBoxList->length() >= maxListLength)
+	BoundingBox box(rect.topLeft(), rect.bottomRight(), rotation, false);
+	//append the box to the appropriate list, according to mode
+	switch(mode)
 	{
-		pBoxList->removeFirst();
-		--currentBoxIndex;
+	case SURFACE:
+		surf->deleteAllInscriptions();
+		surf->setBox(rect.topLeft(), rect.bottomRight(), rotation, false);
+			//FIX THIS!!
+		break;
+	case INSCRIPTION:
+		surf->insertInscr(box, ++currentBoxIndex);
+		break;
+	case GRAPH:
+		surf->ptrInscrAt(currentInscrIndex)->insertBox(box, ++currentBoxIndex);
+		break;
 	}
-	//add bBox to list and increment index
-	pBoxList->insert(++currentBoxIndex, bBox);
-
-	//clear up mess left by rubber band
+	surfaceModified = true;
 	update();
 }
 
@@ -285,7 +392,7 @@ void ImageLabel::rotateRestore()
 	transformImage();
 	update();
 }
-
+/*
 void ImageLabel::saveThumbnails()
 {
 	//iterate through list of bBoxes
@@ -303,3 +410,4 @@ void ImageLabel::saveThumbnails()
 		imageCopy.save(fileName);
 	}
 }
+*/
