@@ -81,16 +81,18 @@ void ImageLabel::modeDown()
 		if(surf->inscriptionCount() > 0)
 		{
 			mode = GRAPH;
+			currentInscrIndex = currentBoxIndex;
  			QTransform trans;
 			trans.rotate(surf->inscrAt(currentInscrIndex).getRotation());
 			QRect selection = surf->inscrAt(currentInscrIndex);
 			surfaceImage = currentImage;
 			currentImage = surfaceImage.transformed(trans) . copy(selection);
-			currentInscrIndex = currentBoxIndex;
 			if(surf->ptrInscrAt(currentInscrIndex)->boxCount() > 0)
 				currentBoxIndex = 0;
 			else
 				currentBoxIndex = -1;
+qDebug() << "modeDown() - currentBoxIndex = " << currentBoxIndex
+	<< "currentInscrIndex =" << currentInscrIndex;
 			reset();
 		}
 		break;
@@ -127,6 +129,8 @@ void ImageLabel::toggleIndexNumbers()
 
 void ImageLabel::advanceCurrentBoxIndex()
 {
+	if(currentBoxIndex == -1) //there are no boxes
+		return;
 	switch(mode)
 	{
 	case SURFACE:
@@ -136,7 +140,10 @@ void ImageLabel::advanceCurrentBoxIndex()
 		currentBoxIndex++;	//advance index by one
 		if(currentBoxIndex >= surf->inscriptionCount())
 			currentBoxIndex = 0;	//wrap around if necessary
+qDebug() << "currentBoxIndex =" << currentBoxIndex 
+	<< ", surf->inscriptionCount() =" << surf->inscriptionCount();
 		update();
+		break;
 	case GRAPH:
 		currentBoxIndex++;
 		if(currentBoxIndex >= surf->ptrInscrAt(currentInscrIndex)->count())
@@ -148,6 +155,8 @@ void ImageLabel::advanceCurrentBoxIndex()
 
 void ImageLabel::reverseCurrentBoxIndex()
 {
+	if(currentBoxIndex == -1) //there are no boxes
+		return;
 	switch(mode)
 	{
 	case SURFACE:
@@ -158,6 +167,7 @@ void ImageLabel::reverseCurrentBoxIndex()
 		if(currentBoxIndex < 0)	//wrap around if necessary
 			currentBoxIndex = surf->inscriptionCount() - 1;
 		update(); //so that that current box is visible
+		break;
 	case GRAPH:
 		currentBoxIndex++;
 		if(currentBoxIndex < 0)
@@ -183,15 +193,14 @@ void ImageLabel::deleteCurrentBox()
 	case INSCRIPTION:
 		surf->deleteInscr(currentBoxIndex);
 		currentBoxIndex--;
-		if(currentBoxIndex == -1 && surf->inscriptionCount() > 0)
-			currentBoxIndex = 0;
+		if(currentBoxIndex == -1)
+			currentBoxIndex = surf->inscriptionCount() - 1;
 		break;
 	case GRAPH:
 		surf->ptrInscrAt(currentInscrIndex)->deleteBox(currentBoxIndex);
 		currentBoxIndex--;
-		if(currentBoxIndex == -1 && 
-					surf->ptrInscrAt(currentInscrIndex)->count() > 0)
-			currentBoxIndex = 0;
+		if(currentBoxIndex == -1)
+			currentBoxIndex = surf->ptrInscrAt(currentInscrIndex)->count() - 1;
 		break;
 	}
 	update();
@@ -230,14 +239,13 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 			currentBoxList.insertBox(surf->inscrAt(i), i);
 		break;
 	case GRAPH:
-		for(int i=0; i < surf->inscrAt(i).count(); i++)
-			currentBoxList.insertBox(surf->inscrAt(currentInscrIndex).at(i), i);
+		for(int i=0; i < surf->ptrInscrAt(currentInscrIndex)->count(); i++)
+			currentBoxList.insertBox(surf->ptrInscrAt(currentInscrIndex)->at(i), i);
 		break;
 	}
 	//iterate through the list of bounding boxes
 	for (int i=0; i<currentBoxList.size(); i++)
 	{
-qDebug() << "now drawing box " << i;
 		BoundingBox currentBox = currentBoxList.at(i);
 
 		//the bounding boxes need to be rotated and scaled
@@ -328,13 +336,17 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 	case SURFACE:
 		surf->deleteAllInscriptions();
 		surf->setBox(rect.topLeft(), rect.bottomRight(), rotation, false);
-			//FIX THIS!!
+			//TODO FIX THIS!!
 		break;
 	case INSCRIPTION:
 		surf->insertInscr(box, ++currentBoxIndex);
 		break;
 	case GRAPH:
+qDebug() << "mouseReleaseEvent (GRAPH) attempting to add graph:";
+qDebug() << "currentInscrIndex =" << currentInscrIndex;
+qDebug() << "currentBoxIndex =" << currentBoxIndex;
 		surf->ptrInscrAt(currentInscrIndex)->insertBox(box, ++currentBoxIndex);
+qDebug() << "inscription list length =" << surf->ptrInscrAt(currentInscrIndex)->count();
 		break;
 	}
 	surfaceModified = true;

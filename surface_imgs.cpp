@@ -57,6 +57,7 @@ InscriptionImgs SurfaceImgs::inscrAt(int index) const
 	if(index < 0 || index >= inscrImgsList.count())
 	{
 		qDebug() << "index oor in SurfaceInscImgs::inscrAt";
+		qDebug() << "index = " << index;
 		return InscriptionImgs();
 	}
 	return inscrImgsList.at(index);

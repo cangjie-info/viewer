@@ -83,6 +83,8 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 {
 	if(!pCorpusQuery) //corpus has not been set
 		return false;
+	//clear list of inscriptions
+	surf.deleteAllInscriptions();
 	QString currentSurfId = pCorpusQuery->value(0).toString();
 	//Query ec.surfaces 
 	QString surfaceQueryString("SELECT imageFile, x1, y1, x2, y2, rotation FROM surfaces WHERE id=");
@@ -105,50 +107,65 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 							QPoint(surfaceQuery.value(3).toInt(), surfaceQuery.value(4).toInt()),
 							surfaceQuery.value(5).toInt(), false);
 	}
-
-	//query ec.images
+	//query ec.inscriptions
 	QString inscriptionQueryString("SELECT id, x1, y1, x2, y2, rotation FROM inscriptions WHERE surfaceId=");
 	inscriptionQueryString += currentSurfId;
-	inscriptionQueryString += ";";
+	inscriptionQueryString += " ORDER BY id DESC;"; //order DESC allows us to ignore trailing nulls
+				//TODO order by serialNumber (DESC) instead
 	QSqlQuery inscriptionQuery(inscriptionQueryString);
-	int currentInscrIndex = 0;
+	//first discard trailing null boxes
+	while(inscriptionQuery.next() && inscriptionQuery.isNull(1))
+	{
+		//skip - do nothing
+	}
+	//query is now either after the last record (if there were no non-null boxes)
+	//or on the first non-null box
+	inscriptionQuery.previous(); //to accommodate the following .next()
 	while(inscriptionQuery.next())
 	{
 		//add inscription bbox to list
 		if(inscriptionQuery.isNull(1))
 			surf.insertInscr(
 				BoundingBox(QPoint(0,0), QPoint(0,0), 0, true), 
-				currentInscrIndex);
+				0); //prepend (insert at index 0) since we used DESC
 		else
 			surf.insertInscr(
 				BoundingBox(	
 					QPoint(inscriptionQuery.value(1).toInt(), inscriptionQuery.value(2).toInt()),
 					QPoint(inscriptionQuery.value(3).toInt(), inscriptionQuery.value(4).toInt()),
 					inscriptionQuery.value(5).toInt(), false),
-				currentInscrIndex );
+				0); //prepend since we used DESC
 		//for each inscription, query graphs.
 		QString currentInscrId = inscriptionQuery.value(0).toString();
 		QString graphQueryString("SELECT x1, y1, x2, y2, rotation FROM inscriptionGraphs WHERE inscriptionId=");
 		graphQueryString += currentInscrId;
-		graphQueryString += ";";
+		graphQueryString += " ORDER BY graphNumber DESC;"; //order descending allows us to ignore trailing nulls
 		QSqlQuery graphQuery(graphQueryString);
+		//first ignore the trailing null graph images
+		while(graphQuery.next() && graphQuery.isNull(0))
+		{
+			//skip - do nothing
+		}
+		//query is now either after the last record (if there were no non-null boxes)
+		//or on the first non-null box
+		graphQuery.previous(); //move previous to accommodate subsequent .next()
 		while(graphQuery.next())
 		{
 			//add graph bbox to inscription
 			if(graphQuery.isNull(0)) //null graph box
-				surf.ptrInscrAt(currentInscrIndex)->insertBox(
+				surf.ptrInscrAt(0)->insertBox(
 					BoundingBox(
 						QPoint(0,0), QPoint(0,0), 0, true),
-					surf.ptrInscrAt(currentInscrIndex)->boxCount());
+					0);	//prepend (i.e. insert at index 0) since we used DESC
 			else //non-null graph box
-				surf.ptrInscrAt(currentInscrIndex)->insertBox(
+				surf.ptrInscrAt(0)->insertBox(
 					BoundingBox(
 						QPoint(graphQuery.value(0).toInt(), graphQuery.value(1).toInt()),
 						QPoint(graphQuery.value(2).toInt(), graphQuery.value(3).toInt()),
 						graphQuery.value(4).toInt(), false),
-					surf.ptrInscrAt(currentInscrIndex)->boxCount());
+					0); 	//prepend (i.e. insert at index 0) since we used DESC
 		}		
-		currentInscrIndex++;
 	}
+	surf.report();
 	return true;
 }
