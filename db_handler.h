@@ -6,12 +6,11 @@
 
 //class to handle ALL interaction with the db
 //AIM: no other class should have any QSqlQuery variables
-//contains a full representaiton of an inscribed surface from the DB
 
 class DbHandler
 {
 public:
-	DbHandler(); //constructor - currently does nothing.
+	DbHandler();  //constructor
 	bool connect();
 		//connects to ec db as user "qt".
 		//returns true if connection succesful, false + error message box otherwise

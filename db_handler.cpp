@@ -23,12 +23,12 @@ bool DbHandler::connect()
 					db.lastError().text());
 		return false;
 	}
-	pCorpusQuery = new QSqlQuery("");
 	return true;
 }
 
 bool DbHandler::setCorpus()
 {
+	pCorpusQuery = new QSqlQuery();
 	pCorpusQuery->exec("SELECT id FROM surfaces;");
 	if(pCorpusQuery->size() > 0)
 	{
@@ -90,7 +90,6 @@ bool DbHandler::readSurface(SurfaceImgs& surf) const
 	QString surfaceQueryString("SELECT imageFile, x1, y1, x2, y2, rotation FROM surfaces WHERE id=");
 	surfaceQueryString += currentSurfId;
 	surfaceQueryString += ";";
-
 	QSqlQuery surfaceQuery(surfaceQueryString);
 	surfaceQuery.next(); //move first
 	//get imageFile
