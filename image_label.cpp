@@ -169,9 +169,9 @@ void ImageLabel::reverseCurrentBoxIndex()
 		update(); //so that that current box is visible
 		break;
 	case GRAPH:
-		currentBoxIndex++;
+		currentBoxIndex--;
 		if(currentBoxIndex < 0)
-			currentBoxIndex = surf->ptrInscrAt(currentInscrIndex)->count();
+			currentBoxIndex = surf->ptrInscrAt(currentInscrIndex)->count() - 1;
 		break;
 	}
 		update();
