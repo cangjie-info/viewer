@@ -13,8 +13,14 @@ public:
 	int getGrapheme() const;
 	void setGrapheme(int newGrapheme);
 	void report() const;
+	void setCanHaveImage(bool can); //set canHanveImage member variable
+	bool getCanHaveImage() const; //get canHaveImage member variable
 private:
-	int markup;
-	int grapheme;
+	int markup; //from ec
+	int grapheme; //from ec
+	bool canHaveImage; //used to mark graphs or other inline elements 
+		//in the transcription that have no corresponding bounding box
+		//in the surface image
+		//TODO remove nullBox apparatus from imageLabel.
 };
 #endif

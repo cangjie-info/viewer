@@ -32,3 +32,13 @@ void GraphTranscription::report() const
 	qDebug() << "Grapheme = " << grapheme;
 }
 
+void GraphTranscription::setCanHaveImage(bool can)
+{
+	canHaveImage = can;
+}
+
+bool GraphTranscription::getCanHaveImage() const
+{
+	return canHaveImage;
+}
+
