@@ -18,324 +18,27 @@ Viewer::Viewer()
 	else
 		qDebug() << "No corpus found.";
 
-	imageLabel = new ImageLabel(this, &surf);
-	advance(); // to move to the first surface and display it
-
+	imageLabel = new ImageLabel(this, &surf); //surf is passed as pointer
+			//so that imageLabel can manipulate it.
+//	transWindow = new TranscriptionWindow(this, &trans);
+	createStatusBar();
 	createActions();
 	createMenus();
 	createToolBars();
-	createStatusBar();
 	scrollArea = new QScrollArea(this);
 	scrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
 	scrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
 	setCentralWidget(scrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
 	showMaximized();
+	advance(); // to move to the first surface and display it
 }
-
-
-/*
-int Viewer::graphsFromDb() //return zero if the currentBoxId 
-									//has no corresponding inscription
-									//otherwise returns the inscriptionId
-{
-	//called on transition to GRAPH from INSCRIPTION
-	//we want all the graphs with the right inscriptionId
-	//so determine that first by seeking the one corresponding to
-	//currentBoxId
-	QSqlQuery inscriptionIdQuery;
-	QString inscriptionIdQueryString = QString(
-										 		"SELECT id "
-												"FROM hdInscriptions "
-												"WHERE textSurfaceId=%1 "
-												"ORDER BY id;")
-												.arg(surfaceIdQuery->value(0).toString());
-qDebug() << inscriptionIdQueryString;
-	inscriptionIdQuery.exec(inscriptionIdQueryString);
-	if(inscriptionIdQuery.seek(imageLabel->getCurrentBoxIndex()))
-	{		//there is a corresponding documented inscription
-		QSqlQuery getGraphQuery;
-		QString getGraphQueryString = QString(
-											 "SELECT x1, y1, x2, y2, rotation "
-											 "FROM hdInscriptionGraphs "
-											 "WHERE inscriptionId = %1 "
-											 "ORDER BY graphId;")
-										.arg(inscriptionIdQuery.value(0).toString());
-qDebug() << getGraphQueryString;
-		getGraphQuery.exec(getGraphQueryString);
-		boxList.clear();
-		bool done = false;
-		while(!done)
-		{
-			if(getGraphQuery.next())
-			{
-				if(getGraphQuery.isNull(0))
-				{
-					done = true;
-				}
-				else
-				{
-					boxList.append(BoundingBox(QPoint(getGraphQuery.value(0).toInt(),
-																 getGraphQuery.value(1).toInt()),
-														QPoint(getGraphQuery.value(2).toInt(),
-																 getGraphQuery.value(3).toInt()),
-																 getGraphQuery.value(4).toInt()));
-				}
-			}
-			else
-			{
-				done = true;
-			}
-		}
-		return inscriptionIdQuery.value(0).toInt();
-	}
-	else
-	{		//there is no corresponding documented inscription
-		return 0;
-	}
-}
-
-
-void Viewer::inscriptionsFromDb() 
-//called on transition to INSCRIPTIONS from other mode
-//surface id is already set
-{
-	//query: all inscriptions associated with a particular surface id
-	QSqlQuery selectInscriptions;
-	QString queryString("SELECT id, x1, y1, x2, y2, rotation "
-							  "FROM hdInscriptions "
-							  "WHERE textSurfaceId=");
-	queryString += surfaceIdQuery->value(0).toString();
-	queryString += " ORDER BY id;";
-qDebug() << queryString;
-	selectInscriptions.exec(queryString);
-	boxList.clear();
-	bool done = false;
-	while(!done)
-	{
-		if(selectInscriptions.next())
-		{
-			if(selectInscriptions.isNull(1))
-			{
-				done=true;
-			}
-			else
-			{
-				boxList.append(BoundingBox(QPoint(selectInscriptions.value(1).toInt(), 
-															 selectInscriptions.value(2).toInt()), 
-											   	QPoint(selectInscriptions.value(3).toInt(), 
-															 selectInscriptions.value(4).toInt()), 
-											   		selectInscriptions.value(5).toInt()));
-			}
-		}
-		else
-		{
-			done=true;
-		}
-	}
-	//ImageLabel::refresh() sets current box to index=0 
-}
-
-void Viewer::graphsToDb()
-{	//called on transition from GRAPH to INSCRIPTION
-	//we only need to know the current inscription id and the box list
-	if(!imageLabel->isLocked())
-	{
-		//get list of all documented graphs associated with the current inscription id
-		QSqlQuery graphIdQuery;
-		QString graphIdQueryString;
-		graphIdQueryString = QString(
-				"SELECT graphId "
-				"FROM hdInscriptionGraphs "
-				"WHERE inscriptionId = %1 "
-				"ORDER BY graphId;")
-				.arg(currentInscriptionId);
-qDebug() << graphIdQueryString;
-		graphIdQuery.exec(graphIdQueryString);
-		for(int i=0; i<boxList.size(); i++)
-		{
-qDebug() << "i = " << i;
-qDebug() << "boxList.size() = " << boxList.size();
-			if(graphIdQuery.next()) //if we haven't exhausted the docuemented graphs
-			{
-				//get ith graph id
-				int graphId = graphIdQuery.value(0).toInt();
-qDebug() << "graphId = " << graphId;
-				//then perform update
-				QString updateGraphQueryString;
-				updateGraphQueryString = QString(
-						"UPDATE hdInscriptionGraphs "
-						"SET x1=%1, y1=%2, x2=%3, y2=%4, rotation=%5 "
-						"WHERE graphId=%6 AND inscriptionId=%7;")
-					.arg(boxList.at(i).x())
-					.arg(boxList.at(i).y())
-					.arg(boxList.at(i).x() + boxList.at(i).width())
-					.arg(boxList.at(i).y() + boxList.at(i).height())
-					.arg(boxList.at(i).getRotation())
-					.arg(graphId)
-					.arg(currentInscriptionId);
-qDebug() << updateGraphQueryString;
-				QSqlQuery updateGraphQuery;
-				updateGraphQuery.exec(updateGraphQueryString);
-			}
-			else //there are no more documented graphs
-				//so discard rest of box list
-				//we could change this subsequently
-					//so that new row are added to ec.inscriptionGraphs instead
-			{
-				break; //NB!! ***********
-			}
-		}
-		//fill remaining rows with NULL
-		//note that this also deals with the case where the box list is empty
-		while(graphIdQuery.next())
-		{
-			QSqlQuery updateGraphs;
-			QString queryString;
-			queryString = QString(
-					"UPDATE hdInscriptionGraphs "
-					"SET x1=NULL, y1=NULL, x2=NULL, y2=NULL, rotation=NULL "
-					"WHERE graphId=%1 AND inscriptionId=%2;")
-				.arg(graphIdQuery.value(0).toInt())
-				.arg(currentInscriptionId);
-qDebug() << queryString;
-			updateGraphs.exec(queryString);
-		}
-	}
-}
-void Viewer::inscriptionsToDb()
-//called on transition from INSCRIPTIONS from other mode
-//we only need to know textSurfaceId and the box list
-{
-	if(!imageLabel->isLocked()) //if the user has not unlocked for editing
-	{									//no point in saving to db
-		//get list of all inscriptions associated with current surface id
-		QSqlQuery inscriptionIdQuery;
-		QString inscriptionIdQueryString;
-		inscriptionIdQueryString = QString(
-			"SELECT id "
-			"FROM hdInscriptions "
-			"WHERE textSurfaceId = %1 "
-			"ORDER BY id;")
-			.arg( surfaceIdQuery->value(0).toString() );
-qDebug() << inscriptionIdQueryString;
-		inscriptionIdQuery.exec(inscriptionIdQueryString);
-		for(int i=0; i<boxList.size(); i++)
-		{
-			if(inscriptionIdQuery.next()) //if we haven't exhausted the documented inscriptions
-			{
-				//get ith inscription id
-				int inscriptionId = inscriptionIdQuery.value(0).toInt();
-				//then perform update
-				QString updateQueryString;
-				updateQueryString = QString("UPDATE hdInscriptions "
-					"SET x1=%1, y1=%2, x2=%3, y2=%4, rotation=%5 "
-					"WHERE id=%6;")
-					.arg(boxList.at(i).x())
-					.arg(boxList.at(i).y())
-					.arg(boxList.at(i).x() + boxList.at(i).width())
-					.arg(boxList.at(i).y() + boxList.at(i).height())
-					.arg(boxList.at(i).getRotation())
-					.arg(inscriptionId);
-qDebug() << updateQueryString;
-				QSqlQuery updateInscriptions;
-				updateInscriptions.exec(updateQueryString);
-			}
-			else //there are no more documented inscriptions
-				//so discard rest of box list
-				//we could change this subsequently 
-					//so that new rows are added to the table instead.
-			{
-				break; //NB!!! ********
-			}
-		}
-		//fill the remaining rows with NULL
-		//note that this also deals with the case where boxList is empty.
-		while(inscriptionIdQuery.next())
-		{
-			QSqlQuery updateInscriptions;
-			QString queryString;
-			queryString = QString(
-				"UPDATE hdInscriptions "
-				"SET x1=NULL, y1=NULL, x2=NULL, y2=NULL, rotation=NULL "
-				"WHERE id=%1")
-				.arg(inscriptionIdQuery.value(0).toInt());
-qDebug() << queryString;
-			updateInscriptions.exec(queryString);
-		}
-	}
-}
-
-void Viewer::surfaceToDb()
-{
-	if(!imageLabel->isLocked())  //if the user has not unlocked for editing
-	{				 					//no point in saving to db
-		QSqlQuery updateQuery;
-		QString queryString;
-		if(boxList.isEmpty()) //user has deleted old box
-		{							//write null values to db
-			queryString = QString(
-						"UPDATE hdTextSurfaces SET x1=NULL, y1=NULL, x2=NULL, y2=NULL, rotation=NULL WHERE id=");
-			queryString += surfaceIdQuery->value(0).toString();
-			queryString += ";";
-		}
-		else // user has replaced the old box with a new one
-		{
-			queryString = QString("UPDATE hdTextSurfaces SET x1="); //redo with arg for god's sake!!
-			queryString += QString::number(boxList.first().x());
-			queryString += QString(", y1=");
-			queryString += QString::number(boxList.first().y());
-			queryString += QString(", x2=");
-			queryString += QString::number(boxList.first().x() + boxList.first().width());
-			queryString += QString(", y2=");
-			queryString += QString::number(boxList.first().y() + boxList.first().height());
-			queryString += QString(", rotation=");
-			queryString += QString::number(boxList.first().getRotation());
-			queryString += QString(" WHERE id=");
-			queryString += surfaceIdQuery->value(0).toString();
-			queryString += ";";
-		}
-qDebug() << queryString;
-		updateQuery.exec(queryString);
-	}
-}
-
-void Viewer::surfaceFromDb()
-{
-	QSqlQuery selectQuery;
-	QString queryString("SELECT imageFile, x1, y1, x2, y2, rotation FROM hdTextSurfaces WHERE id = ");
-	queryString += surfaceIdQuery->value(0).toString();
-	queryString += ";";
-qDebug() << queryString;
-	selectQuery.exec(queryString);
-	if(selectQuery.next())
-	{
-		boxList.clear();
-		if(!selectQuery.isNull(1)) //if the first x-coordinate is null, assume there are no surface coords
-												//otherwise retrieve the bounding box
-		{
-			boxList.append(BoundingBox(QPoint(selectQuery.value(1).toInt(), selectQuery.value(2).toInt()), 
-												QPoint(selectQuery.value(3).toInt(), selectQuery.value(4).toInt()), 
-												selectQuery.value(5).toInt()));
-		}
-		QString fileName = selectQuery.value(0).toString();
-		fileName.prepend("/home/ads/repository/text_imgs/hd/");
-qDebug() << fileName;
-		currentImage = QImage(fileName); // load image file from disk.
-		imageLabel->refresh();
-	}
-	else
-	{
-qDebug() << "Bad query:" << queryString << "\n";
-	}
-}
-*/
 
 void Viewer::advance()
 {
 	if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
 	{
 		//TODO db.writeSurface(surf);
-		db.nextSurface();
+		db.nextSurface(); //stays put if already on last record
 		db.readSurface(surf);
 		imageLabel->newSurf();
 	}
@@ -347,7 +50,7 @@ void Viewer::back()
 	if(imageLabel->getMode() == ImageLabel::SURFACE)
 	{
 		//TODO db.writeSurface(surf) //save current state
-		db.previousSurface();
+		db.previousSurface(); //stays put if already on first record
 		db.readSurface(surf);
 		imageLabel->newSurf();
 	}
