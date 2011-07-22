@@ -179,19 +179,22 @@ void ImageLabel::reverseCurrentBoxIndex()
 
 void ImageLabel::deleteCurrentBox()
 //if an inscription or surface box is deleted
-//all boxes below it in the hierarchy should be deleted too
+//all boxes below it in the hierarchy (graphs, or graphs and inscriptions)
+//are deleted too
+//TODO call TranscriptionWindow::refresh() via signal and slot (? or just from Viewer?)
 {
 	if(locked || currentBoxIndex == -1)
 		return;
 	switch(mode)
 	{
 	case SURFACE:
-		surf->setNull(true);
+		*surf = BoundingBox(QPoint(0,0), QPoint(0,0), 0);
 		surf->deleteAllInscriptions(); //warn first?
 		currentBoxIndex = -1;
 		break;
 	case INSCRIPTION:
 		surf->deleteInscr(currentBoxIndex);
+		emit inscrImgListModified(); //signal picked up by TranscriptionWindow
 		currentBoxIndex--;
 		if(currentBoxIndex == -1)
 			currentBoxIndex = surf->inscriptionCount() - 1;
@@ -227,7 +230,7 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 	painter.setFont(font);
 	painter.setPen(Qt::red);
 	//make a list of bounding boxes according to current mode
-	BoxList currentBoxList; //this is a list of all boxes, null and non-null
+	BoxList currentBoxList; //this is a list of all boxes
 	currentBoxList.clear();
 	switch(mode)
 	{
@@ -318,6 +321,8 @@ void ImageLabel::mouseMoveEvent(QMouseEvent* event)
 
 //mouse up, end rubberband
 void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
+//TODO after adding new item, TranscriptionWindow::reset() must be called
+	//use signal and slot arrangement.
 {
 	rubberBand->hide();
 	//get bBox, accounting for rotation and zoom
@@ -329,17 +334,18 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 		update(); //to remove the mess
 		return;
 	}
-	BoundingBox box(rect.topLeft(), rect.bottomRight(), rotation, false);
+	BoundingBox box(rect.topLeft(), rect.bottomRight(), rotation/*, false*/);
 	//append the box to the appropriate list, according to mode
 	switch(mode)
 	{
 	case SURFACE:
 		surf->deleteAllInscriptions();
-		surf->setBox(rect.topLeft(), rect.bottomRight(), rotation, false);
+		surf->setBox(rect.topLeft(), rect.bottomRight(), rotation/*, false*/);
 			//TODO FIX THIS!!
 		break;
 	case INSCRIPTION:
 		surf->insertInscr(box, ++currentBoxIndex);
+		emit inscrImgListModified(); //picked up by TranscriptionWindow
 		break;
 	case GRAPH:
 qDebug() << "mouseReleaseEvent (GRAPH) attempting to add graph:";

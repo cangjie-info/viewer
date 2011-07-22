@@ -5,6 +5,7 @@
 #include <QMessageBox>
 
 Viewer::Viewer()
+	: imageLabel(NULL), transWindow(NULL)
 {
 	//set up connection with db
 	db = DbHandler(); 
@@ -18,9 +19,15 @@ Viewer::Viewer()
 	else
 		qDebug() << "No corpus found.";
 
+	//create ImageLabel - for displaying the surface images
 	imageLabel = new ImageLabel(this, &surf); //surf is passed as pointer
 			//so that imageLabel can manipulate it.
-//	transWindow = new TranscriptionWindow(this, &trans);
+
+	//create TranscriptionWindow as a dock widget
+	dock = new QDockWidget(this);
+	dock->setAllowedAreas(Qt::TopDockWidgetArea);
+	addDockWidget(Qt::TopDockWidgetArea, dock);
+
 	createStatusBar();
 	createActions();
 	createMenus();
@@ -37,10 +44,23 @@ void Viewer::advance()
 {
 	if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
 	{
-		//TODO db.writeSurface(surf);
+		//TODO db.writeSurface(surf, trans);
 		db.nextSurface(); //stays put if already on last record
-		db.readSurface(surf);
+		db.readSurface(surf, trans);
 		imageLabel->newSurf();
+
+		//delete old transcription window and create new one
+		if(transWindow) 
+			delete transWindow;
+		transWindow = new TranscriptionWindow(this, &trans);
+
+		//connect ImageLabel signals to transcription window slots
+		connect(imageLabel, SIGNAL(inscrImgListModified()), transWindow, SLOT(refresh()));
+
+		//install transcription window in dock
+		dock->setWidget(transWindow);
+		transWindow->refresh();
+		transWindow->show(); //or is it the dock that we need to show()???
 	}
 	//else do nothing
 }
@@ -53,7 +73,18 @@ void Viewer::back()
 		db.previousSurface(); //stays put if already on first record
 		db.readSurface(surf);
 		imageLabel->newSurf();
+		if(transWindow) 
+			delete transWindow;
+		transWindow = new TranscriptionWindow(this, &trans);
+		dock->setWidget(transWindow);
+		transWindow->refresh();
+		transWindow->show(); //or is it the dock that we need to show()???
 	}
+}
+
+void refreshTransWindow()
+{
+	transWindow->refresh();
 }
 
 void Viewer::createActions()
@@ -95,7 +126,8 @@ void Viewer::createActions()
 	boxBackAction->setShortcut(tr("["));
 	connect(boxBackAction, SIGNAL(triggered()), imageLabel, SLOT(reverseCurrentBoxIndex()));
 
-	deleteCurrentBoxAction = new QAction(tr("&Delete box"), this);
+	deleteCurrentBoxAction = new QAction(tr("&Delete box"), this); 
+		//TODO call to TranscriptionWindow::refresh()
 	deleteCurrentBoxAction->setShortcut(tr("Backspace"));
 	connect(deleteCurrentBoxAction, SIGNAL(triggered()), imageLabel, SLOT(deleteCurrentBox()));
 

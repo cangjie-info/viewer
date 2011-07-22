@@ -10,10 +10,12 @@
 
 #include <QMainWindow>
 #include <QScrollArea>
+#include <QDockWindow>
 #include "surface_imgs.h"
 #include "db_handler.h"
 #include "image_label.h"
 #include "surface_transcription.h"
+#include "transcription_window.h"
 
 class Viewer : public QMainWindow
 {
@@ -31,6 +33,9 @@ private slots:
 		//and sets image in imageLabel.
 	void back();
 	//TODO advance(int jump), back(int jump), advanceTenPc(), moveLast(), etc.
+	void refreshTransWindow(); //call transWidnow->refresh();
+			//connected to signals emitted by deleteCurrentBoxAction
+			//and by ImageLabel onMouseUp.
 private:
 	//TODO update status bar
 //functions to set up UI
@@ -86,7 +91,9 @@ private:
 	SurfaceTranscription trans; //stores complete transcription and markup for one surface
 			//consists of data for surface, plus a list of inscriptionTrans, each of which 
 			//consists of a list of graphTrans.
-//	TranscriptionWindow transWindow; //widget for displaying and editing transcriptions.
+	TranscriptionWindow* transWindow; 	//widget for displaying and editing 
+													//sets of transcriptions.
+	QDockWindow* dock;// dock window for the TranscriptinWindow.
 }; 
 
 #endif

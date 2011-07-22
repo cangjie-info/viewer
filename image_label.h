@@ -49,6 +49,9 @@ public slots:
 	void unlock(); //sets locked to false
 //	bool isLocked(); //returns value of locked
 
+signals:
+	void inscrImgListModified();
+
 protected:
 	void paintEvent(QPaintEvent* event); //reimplement paintEvent(?)
 
