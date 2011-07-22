@@ -6,6 +6,8 @@
 InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNumber, int imgNumber, bool isCurrent)
 	: QWidget(parent)
 {
+	//set name
+	setObjectName("IW");
 	//HBoxLayout
 	QHBoxLayout* layout = new QHBoxLayout();
 	//numberLabel

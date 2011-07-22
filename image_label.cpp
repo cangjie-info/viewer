@@ -345,6 +345,7 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 		break;
 	case INSCRIPTION:
 		surf->insertInscr(box, ++currentBoxIndex);
+qDebug() << "about to emit inscImgListModified()";
 		emit inscrImgListModified(); //picked up by TranscriptionWindow
 		break;
 	case GRAPH:

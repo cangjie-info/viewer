@@ -33,10 +33,11 @@ TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const Surf
 void TranscriptionWindow::refresh()
 {
 	//remove all old InscriptionWidgets
-	QList<InscriptionWidget*> oldList = this->findChildren<InscriptionWidget*>();
+	QList<InscriptionWidget*> oldList = this->findChildren<InscriptionWidget*>("IW");
 	while(!oldList.isEmpty())
 		delete oldList.takeFirst();
 qDebug() << "OK4";
+	currentInscription = 0;
 	//generate InscriptionWidgets to accommodate surfTrans, and surfImgs
 	//imgsIndex = 0; transIndex = 0;
 	int imgsIndex = 0; //index to QList of InscriptionImgs in surfImgs
@@ -49,7 +50,7 @@ qDebug() << "OK4";
 			//append new inscription to surfTrans
 			InscriptionTranscription newTrans;
 			newTrans.setCanHaveImage(true); //make sure that this can be associated with an image
-			surfTrans->append(InscriptionTranscription());
+         surfTrans->append(newTrans);
 			//transIndex is no longer oor.
 		}
 		//transIndex in range
@@ -68,6 +69,9 @@ qDebug() << "OK4";
 		if(imgNumber != -2) //if we have accommodated an image (or already run out of imgs)
 			imgsIndex++;
 		layout->addWidget(inscrWidget);
+oldList = this->findChildren<InscriptionWidget*>("IW");
+qDebug() << oldList.size() << "items in list";
+qDebug() << "imgsIndex =" << imgsIndex << "/ imgs count =" << surfImgs->inscriptionCount();
 		transIndex++;
 	}
 

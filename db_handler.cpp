@@ -125,12 +125,15 @@ bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 		//add inscription to trans, no matter what
 		trans.prepend(InscriptionTranscription());
 		if(!inscriptionQuery.isNull(1)) //add inscription bbox to list if not null
+		{
 			surf.insertInscr(
 				BoundingBox(	
 					QPoint(inscriptionQuery.value(1).toInt(), inscriptionQuery.value(2).toInt()),
 					QPoint(inscriptionQuery.value(3).toInt(), inscriptionQuery.value(4).toInt()),
 					inscriptionQuery.value(5).toInt()/*, false*/),
 				0); //inserting at the beginning of the list
+			trans[0].setCanHaveImage(true);
+		}
 		else //if bbox is null, set insription trans canHaveImage to false
 			trans[0].setCanHaveImage(false);
 		
