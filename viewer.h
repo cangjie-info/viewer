@@ -10,7 +10,7 @@
 
 #include <QMainWindow>
 #include <QScrollArea>
-#include <QDockWindow>
+#include <QDockWidget>
 #include "surface_imgs.h"
 #include "db_handler.h"
 #include "image_label.h"
@@ -33,9 +33,12 @@ private slots:
 		//and sets image in imageLabel.
 	void back();
 	//TODO advance(int jump), back(int jump), advanceTenPc(), moveLast(), etc.
+/* Almost certainly junk - DELETE
 	void refreshTransWindow(); //call transWidnow->refresh();
 			//connected to signals emitted by deleteCurrentBoxAction
 			//and by ImageLabel onMouseUp.
+*/
+
 private:
 	//TODO update status bar
 //functions to set up UI
@@ -93,7 +96,7 @@ private:
 			//consists of a list of graphTrans.
 	TranscriptionWindow* transWindow; 	//widget for displaying and editing 
 													//sets of transcriptions.
-	QDockWindow* dock;// dock window for the TranscriptinWindow.
+	QDockWidget* dock;// dock window for the TranscriptinWindow.
 }; 
 
 #endif

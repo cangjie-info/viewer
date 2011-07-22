@@ -48,18 +48,18 @@ void Viewer::advance()
 		db.nextSurface(); //stays put if already on last record
 		db.readSurface(surf, trans);
 		imageLabel->newSurf();
-
+qDebug() << "OK1";
 		//delete old transcription window and create new one
 		if(transWindow) 
 			delete transWindow;
-		transWindow = new TranscriptionWindow(this, &trans);
-
+		transWindow = new TranscriptionWindow(&trans, &surf);
+qDebug() << "OK2";
 		//connect ImageLabel signals to transcription window slots
 		connect(imageLabel, SIGNAL(inscrImgListModified()), transWindow, SLOT(refresh()));
 
 		//install transcription window in dock
 		dock->setWidget(transWindow);
-		transWindow->refresh();
+qDebug() << "OK3";
 		transWindow->show(); //or is it the dock that we need to show()???
 	}
 	//else do nothing
@@ -71,21 +71,23 @@ void Viewer::back()
 	{
 		//TODO db.writeSurface(surf) //save current state
 		db.previousSurface(); //stays put if already on first record
-		db.readSurface(surf);
+		db.readSurface(surf, trans);
 		imageLabel->newSurf();
 		if(transWindow) 
 			delete transWindow;
-		transWindow = new TranscriptionWindow(this, &trans);
+		transWindow = new TranscriptionWindow(&trans, &surf);
 		dock->setWidget(transWindow);
 		transWindow->refresh();
 		transWindow->show(); //or is it the dock that we need to show()???
 	}
 }
 
+/* probably junk DELETE
 void refreshTransWindow()
 {
 	transWindow->refresh();
 }
+*/
 
 void Viewer::createActions()
 {

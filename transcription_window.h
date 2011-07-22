@@ -19,8 +19,10 @@
 #include <QWidget>
 #include <QLabel>
 #include <QList>
+#include <QVBoxLayout>
 #include "inscription_widget.h"
 #include "surface_transcription.h"
+#include "surface_imgs.h"
 
 class TranscriptionWindow : public QWidget
 {
@@ -29,7 +31,7 @@ public:
 	TranscriptionWindow(SurfaceTranscription* const trans, const SurfaceImgs* const imgs); //constructor
 		//creates surfaceLabel and calls refresh()
 //NO. PUT IN VIEWER.	void editCurrentInscription(); //creates new pop-up dialog to edit the current inscription
-	void toggleCanHaveImg(bool can);	//sets the current inscription's canHaveImage, 
+	void toggleCanHaveImg();	//sets the current inscription's canHaveImage, 
 		//modifies surfTrans (may require adding or deleting inscriptions)
 		//and calls refresh()
 	void nextInscription(); //increments currentInscription.
@@ -60,6 +62,7 @@ public slots:
 		//refresh() should be called as a slot by a signal emitted by ImageLabel::mouseUp. (i.e. on creation
 		//of new image bbox. Also called on ImageLabel::deleteBox.
 private:
+	QVBoxLayout* layout; //top-level layout for widget
 	SurfaceTranscription* surfTrans;
 	int currentInscription; //index of current inscription label (incl. append inscription label)
 	QLabel inscrImgLabel; //hold img of current inscription if there is one.

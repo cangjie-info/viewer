@@ -16,7 +16,7 @@ void InscriptionTranscription::report() const
 	qDebug() << "END REPORT FOR InscriptionTranscription";
 }
 
-QString getInscrString() const
+QString InscriptionTranscription::getInscrString() const
 {
 	QString inscrString;
 	for(int i=0; i<count(); i++)
@@ -27,6 +27,8 @@ QString getInscrString() const
 		} else { //add grapheme to transcription
 			inscrString += QChar(57343 + at(i).getGrapheme()); 
 				//offset 57343 = DFFF for Private Use Area
+		}
+	}
 	return inscrString;
 }		
 

@@ -3,6 +3,7 @@
 
 #include <QSqlQuery>
 #include "surface_imgs.h"
+#include "surface_transcription.h"
 
 //class to handle ALL interaction with the db
 //AIM: no other class should have any QSqlQuery variables
@@ -31,7 +32,7 @@ public:
 		//returns number of surfaces in corpus
 	int getPositionInCorpus() const;
 		//returns ordinal position of current surface in corpus
-	bool readSurface(SurfaceImgs& surf) const; //gets currentSurface via DbHandler
+	bool readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const; //gets currentSurface via DbHandler
 //TODO	bool writeSurface(const Surface* const pSurface); //writes currentSurface via DbHandler
 						//must delete all inscriptions and graphs from old version of surface
 						//use transaction

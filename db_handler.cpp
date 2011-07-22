@@ -85,7 +85,7 @@ bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 		return false;
 	//clear both lists of inscriptions (which deletes graphs too)
 	surf.deleteAllInscriptions();
-	trans.removeAll();
+	trans.clear();
 
 	QString currentSurfId = pCorpusQuery->value(0).toString();
 	//Query ec.surfaces 
@@ -145,8 +145,8 @@ bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 		{
 			//add graph transcription to trans[0]
 			GraphTranscription newGraph(
-					graphQuery.value(5), 	//markup
-					graphQuery.value(6)); 	//grapheme 
+					graphQuery.value(5).toInt(), 	//markup
+					graphQuery.value(6).toInt()); 	//grapheme 
 			trans[0].prepend(newGraph);
 			//add graph bbox to inscription
 			if(!graphQuery.isNull(0)) //if non-null graph box
