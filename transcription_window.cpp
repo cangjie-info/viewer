@@ -8,24 +8,9 @@
 TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const SurfaceImgs* const imgs)
 	: surfTrans(trans), surfImgs(imgs), layout(NULL)
 {
-/* DELETE
-	//create surface label
-	QLabel* surfaceLabel = new QLabel(this);
-	QString surfaceLabelText = QString("surface = %1\nsurface type = %2\nnumber of inscriptions = %3")
-		.arg(surfTrans->getPubId() + surfTrans->getPubNumber())
-		.arg(surfTrans->getSurfaceType())
-		.arg(surfTrans->count());
-	//style label
-	surfaceLabel->setText(surfaceLabelText);
-	surfaceLabel->setMargin(10);
-//	surfaceLabel->setFrameStyle(QFrame::StyledPanel);
-//	surfaceLabel->setFrameShadow(QFrame::Raised);
-	//make scroll area to hold everything in
-	//add to layout
 	layout = new QVBoxLayout();
 	setLayout(layout);
-*/	
-	//TODO ? create QLabel to hold image of current inscription
+
 	//generate InscriptionLabels, etc. reflecting current state of surfTrans
 	refresh();
 }
@@ -36,12 +21,10 @@ void TranscriptionWindow::refresh()
 	QList<InscriptionWidget*> oldList = this->findChildren<InscriptionWidget*>("IW");
 	while(!oldList.isEmpty())
 		delete oldList.takeFirst();
+
+	int windowHeight = 0; //sum the heights of the inscription labels, and use to set the height of the widget
 	currentInscription = 0;
-	//trash old layout, and make new one
-	if(layout)
-		delete layout;
-	layout = new QVBoxLayout();
-	setLayout(layout);
+
 	//generate InscriptionWidgets to accommodate surfTrans, and surfImgs
 	//imgsIndex = 0; transIndex = 0;
 	int imgsIndex = 0; //index to QList of InscriptionImgs in surfImgs
@@ -72,6 +55,12 @@ void TranscriptionWindow::refresh()
 			//TODO get corresponding inscription img and setPixmap on image QLabel
 		if(imgNumber != -2) //if we have accommodated an image (or already run out of imgs)
 			imgsIndex++;
+
+//This is a hack required to get the layout manager to behave as I want.
+//TODO find orthodox solution to this.
+windowHeight += inscrWidget->sizeHint().height();
+inscrWidget->setMaximumHeight(inscrWidget->sizeHint().height());
+
 		layout->addWidget(inscrWidget);
 		transIndex++;
 	}
@@ -81,7 +70,12 @@ void TranscriptionWindow::refresh()
 				InscriptionWidget(this, "append new", surfTrans->count(), -1, false);
 	if(currentInscription == surfTrans->count())
 		appendInscrWidget->setCurrent(true);
+	windowHeight += appendInscrWidget->sizeHint().height();
 	layout->addWidget(appendInscrWidget);
+	
+//This is a hack, to get the layout manager to behave appropriately
+//TODO find proper solution.
+	setMinimumHeight(windowHeight);
 }
 
 void TranscriptionWindow::toggleCanHaveImg()

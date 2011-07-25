@@ -44,6 +44,10 @@ private slots:
 */
 
 private:
+	void newSurf(); //reads surface from db
+		//sets up transcriptions window in scroll area
+		//connects up signals and slots
+		//updates status bar
 //functions to set up UI
 	void createActions();
 	void createMenus();

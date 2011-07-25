@@ -25,9 +25,10 @@ Viewer::Viewer()
 
 	//create dock and scroll area for transWindow 
 	dock = new QDockWidget(this);
-	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea);
+	dock->setAllowedAreas(Qt::LeftDockWidgetArea);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
 	transScrollArea = new QScrollArea(this);
+	transScrollArea->setMinimumWidth(500);
 //	transScrollArea->setBackgroundRole(QPalette::Dark);
 	dock->setWidget(transScrollArea);
 
@@ -42,12 +43,8 @@ Viewer::Viewer()
 	advance(); // to move to the first surface and display it
 }
 
-void Viewer::advance()
+void Viewer::newSurf()
 {
-	if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
-	{
-		//TODO db.writeSurface(surf, trans);
-		db.nextSurface(); //stays put if already on last record
 		db.readSurface(surf, trans);
 
 		locked = true;
@@ -64,9 +61,19 @@ void Viewer::advance()
 
 		//install transcription window in scroll area in dock
 		transScrollArea->setWidget(transWindow);
+
 		transWindow->show(); //or is it the dock that we need to show()???
 
 		statusUpdate();
+}
+	
+void Viewer::advance()
+{
+	if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
+	{
+		//TODO db.writeSurface(surf, trans);
+		db.nextSurface(); //stays put if already on last record
+		newSurf();
 	}
 	//else do nothing
 }
@@ -77,20 +84,7 @@ void Viewer::back()
 	{
 		//TODO db.writeSurface(surf) //save current state
 		db.previousSurface(); //stays put if already on first record
-		db.readSurface(surf, trans);
-
-		locked = true;
-		modified = false;
-		
-		imageLabel->newSurf();
-		if(transWindow) 
-			delete transWindow;
-		transWindow = new TranscriptionWindow(&trans, &surf);
-		transScrollArea->setWidget(transWindow);
-		transWindow->refresh();
-		transWindow->show(); //or is it the dock that we need to show()???
-
-		statusUpdate();
+		newSurf();
 	}
 }
 

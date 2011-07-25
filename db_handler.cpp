@@ -163,7 +163,5 @@ bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 				trans[0][0].setCanHaveImage(false);
 		}		
 	}
-	surf.report();
-	trans.report();
 	return true;
 }

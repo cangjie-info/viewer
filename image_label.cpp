@@ -303,7 +303,7 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 		if(indexNumbersVisible)
 		{
 			painter.drawText(currentBox.left(), currentBox.top(), 50, 50, 
-						Qt::AlignBottom,  QString("%1").arg(i));
+						Qt::AlignBottom,  QString("%1").arg(i+1)); //visible index, so base = 1, not zero
 		}
 		//return pen color to red (might be green)
 		painter.setPen(Qt::red);

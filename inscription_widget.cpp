@@ -12,7 +12,7 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 	QHBoxLayout* layout = new QHBoxLayout();
 	//numberLabel
 	QLabel* numLabel = new QLabel();
-	QString numLabelText = QString("%1 / ").arg(transNumber);
+	QString numLabelText = QString("%1 / ").arg(transNumber+1); //displayed index base = 1, not 0
 	if(imgNumber == -2)	//hack to represent canHaveImage == false. 
 		numLabelText += "no image";
 	else if(imgNumber == -1) //hack to represent no image supplied
@@ -20,7 +20,7 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 			//do nothing - blank imgNumber
 		}
 	else
-		numLabelText += QString("%1").arg(imgNumber);
+		numLabelText += QString("%1").arg(imgNumber+1); //displayed index base = 1, not 0
 	numLabel->setText(numLabelText);
 	numLabel->setMaximumWidth(100);
 	numLabel->setMinimumWidth(100);
