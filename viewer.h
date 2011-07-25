@@ -88,7 +88,8 @@ private:
 //private data members
 	ImageLabel* imageLabel; //widget that holds and manipulates the image being viewed
 	DbHandler db; //handles all SQL queries and other interaction with ec db
-	QScrollArea* scrollArea; //provides scroll bars for large imageLabel
+	QScrollArea* imgScrollArea; //provides scroll bars for large imageLabel
+	QScrollArea* transScrollArea; //provides scroll bars for the transcriptions list
 	SurfaceImgs surf; //complete representation of inscribed surface
 			//passed as reference to imageLabel.
 	SurfaceTranscription trans; //stores complete transcription and markup for one surface

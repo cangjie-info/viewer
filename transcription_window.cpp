@@ -10,15 +10,17 @@ TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const Surf
 {
 	//create surface label
 	QLabel* surfaceLabel = new QLabel(this);
-	QString surfaceLabelText = QString("surface = %1: surface type = %2, number of inscriptions = %3")
+	QString surfaceLabelText = QString("surface = %1\nsurface type = %2\nnumber of inscriptions = %3")
 		.arg(surfTrans->getPubId() + surfTrans->getPubNumber())
 		.arg(surfTrans->getSurfaceType())
 		.arg(surfTrans->count());
 	//style label
 	surfaceLabel->setText(surfaceLabelText);
 	surfaceLabel->setMargin(10);
-	surfaceLabel->setFrameStyle(QFrame::StyledPanel);
-	surfaceLabel->setFrameShadow(QFrame::Raised);
+//	surfaceLabel->setFrameStyle(QFrame::StyledPanel);
+//	surfaceLabel->setFrameShadow(QFrame::Raised);
+	//make scroll area to hold everything in
+
 	//add to layout
 	layout = new QVBoxLayout();
 	setLayout(layout);
@@ -36,7 +38,6 @@ void TranscriptionWindow::refresh()
 	QList<InscriptionWidget*> oldList = this->findChildren<InscriptionWidget*>("IW");
 	while(!oldList.isEmpty())
 		delete oldList.takeFirst();
-qDebug() << "OK4";
 	currentInscription = 0;
 	//generate InscriptionWidgets to accommodate surfTrans, and surfImgs
 	//imgsIndex = 0; transIndex = 0;
@@ -69,9 +70,6 @@ qDebug() << "OK4";
 		if(imgNumber != -2) //if we have accommodated an image (or already run out of imgs)
 			imgsIndex++;
 		layout->addWidget(inscrWidget);
-oldList = this->findChildren<InscriptionWidget*>("IW");
-qDebug() << oldList.size() << "items in list";
-qDebug() << "imgsIndex =" << imgsIndex << "/ imgs count =" << surfImgs->inscriptionCount();
 		transIndex++;
 	}
 

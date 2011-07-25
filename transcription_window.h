@@ -16,7 +16,7 @@
 //TODO TranscriptionWindow can be switched on and off from Viewer, to reduce
 //overhead, especially when drawing new inscription bboxes.
 
-#include <QWidget>
+#include <QScrollArea>
 #include <QLabel>
 #include <QList>
 #include <QVBoxLayout>

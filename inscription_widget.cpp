@@ -22,7 +22,6 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 	else
 		numLabelText += QString("%1").arg(imgNumber);
 	numLabel->setText(numLabelText);
-	numLabel->setMinimumWidth(80); //300 pixels wide - see how it looks and edit accordingly
 	//add to layout
 	layout->addWidget(numLabel);
 	
@@ -35,7 +34,7 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 	if(isCurrent)
 		setStyleSheet("background-color: white");
 	else
-		setStyleSheet("background-color: grey");
+		setStyleSheet("background-color: #");
 	//add to layout
 	layout->addWidget(transLabel);
 

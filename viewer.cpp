@@ -25,17 +25,20 @@ Viewer::Viewer()
 
 	//create TranscriptionWindow as a dock widget
 	dock = new QDockWidget(this);
-	dock->setAllowedAreas(Qt::TopDockWidgetArea);
-	addDockWidget(Qt::TopDockWidgetArea, dock);
+	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea);
+	addDockWidget(Qt::LeftDockWidgetArea, dock);
+	transScrollArea = new QScrollArea(this);
+//	transScrollArea->setBackgroundRole(QPalette::Dark);
+	dock->setWidget(transScrollArea);
 
 	createStatusBar();
 	createActions();
 	createMenus();
 	createToolBars();
-	scrollArea = new QScrollArea(this);
-	scrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
-	scrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
-	setCentralWidget(scrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
+	imgScrollArea = new QScrollArea(this);
+	imgScrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
+	imgScrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
+	setCentralWidget(imgScrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
 	showMaximized();
 	advance(); // to move to the first surface and display it
 }
@@ -48,18 +51,15 @@ void Viewer::advance()
 		db.nextSurface(); //stays put if already on last record
 		db.readSurface(surf, trans);
 		imageLabel->newSurf();
-qDebug() << "OK1";
 		//delete old transcription window and create new one
 		if(transWindow) 
 			delete transWindow;
 		transWindow = new TranscriptionWindow(&trans, &surf);
-qDebug() << "OK2";
 		//connect ImageLabel signals to transcription window slots
 		connect(imageLabel, SIGNAL(inscrImgListModified()), transWindow, SLOT(refresh()));
 
 		//install transcription window in dock
-		dock->setWidget(transWindow);
-qDebug() << "OK3";
+		transScrollArea->setWidget(transWindow);
 		transWindow->show(); //or is it the dock that we need to show()???
 	}
 	//else do nothing
@@ -76,18 +76,11 @@ void Viewer::back()
 		if(transWindow) 
 			delete transWindow;
 		transWindow = new TranscriptionWindow(&trans, &surf);
-		dock->setWidget(transWindow);
+		transScrollArea->setWidget(transWindow);
 		transWindow->refresh();
 		transWindow->show(); //or is it the dock that we need to show()???
 	}
 }
-
-/* probably junk DELETE
-void refreshTransWindow()
-{
-	transWindow->refresh();
-}
-*/
 
 void Viewer::createActions()
 {
