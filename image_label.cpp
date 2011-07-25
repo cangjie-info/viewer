@@ -20,6 +20,7 @@ ImageLabel::ImageLabel(QWidget* parent, SurfaceImgs* surface) //constructor
 
 void ImageLabel::newSurf()
 {
+	hide();
 	QString imageFile = surf->getImageFile();
 	imageFile.prepend("/home/ads/repository/text_imgs/");
 	originalImage = QImage(imageFile); // load image file from disk.
@@ -27,7 +28,6 @@ void ImageLabel::newSurf()
 	currentBoxIndex=0; //in SURFACE mode, so this is the only possible value
 		//remember that there may not actually be any boxes at all
 	locked = true;
-	surfaceModified = false;
 	mode = SURFACE;
 	reset();
 }
@@ -48,11 +48,36 @@ void ImageLabel::reset()
 	//private member transform is updated, so...
 	transformImage();
 	update();
+	show();
 }
 
-ImageLabel::Mode ImageLabel::getMode()
+ImageLabel::Mode ImageLabel::getMode() const
 {
 	return mode;
+}
+
+QString ImageLabel::getModeName() const
+{
+	switch (mode)
+	{
+	case SURFACE:
+		return "SURFACE";
+	case INSCRIPTION:
+		return "INSCRIPTION";
+	case GRAPH:
+		return "GRAPH";
+	}
+	return "";
+}
+
+double ImageLabel::getZoom() const
+{
+	return zoom;
+}
+
+double ImageLabel::getRotation() const
+{
+	return rotation;
 }
 
 void ImageLabel::modeDown()
@@ -345,18 +370,12 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 		break;
 	case INSCRIPTION:
 		surf->insertInscr(box, ++currentBoxIndex);
-qDebug() << "about to emit inscImgListModified()";
 		emit inscrImgListModified(); //picked up by TranscriptionWindow
 		break;
 	case GRAPH:
-qDebug() << "mouseReleaseEvent (GRAPH) attempting to add graph:";
-qDebug() << "currentInscrIndex =" << currentInscrIndex;
-qDebug() << "currentBoxIndex =" << currentBoxIndex;
 		surf->ptrInscrAt(currentInscrIndex)->insertBox(box, ++currentBoxIndex);
-qDebug() << "inscription list length =" << surf->ptrInscrAt(currentInscrIndex)->count();
 		break;
 	}
-	surfaceModified = true;
 	update();
 }
 

@@ -6,8 +6,9 @@
 #include <QDebug>
 
 TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const SurfaceImgs* const imgs)
-	: surfTrans(trans), surfImgs(imgs)
+	: surfTrans(trans), surfImgs(imgs), layout(NULL)
 {
+/* DELETE
 	//create surface label
 	QLabel* surfaceLabel = new QLabel(this);
 	QString surfaceLabelText = QString("surface = %1\nsurface type = %2\nnumber of inscriptions = %3")
@@ -20,14 +21,11 @@ TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const Surf
 //	surfaceLabel->setFrameStyle(QFrame::StyledPanel);
 //	surfaceLabel->setFrameShadow(QFrame::Raised);
 	//make scroll area to hold everything in
-
 	//add to layout
 	layout = new QVBoxLayout();
 	setLayout(layout);
-	layout->addWidget(surfaceLabel);
-	
+*/	
 	//TODO ? create QLabel to hold image of current inscription
-
 	//generate InscriptionLabels, etc. reflecting current state of surfTrans
 	refresh();
 }
@@ -39,6 +37,11 @@ void TranscriptionWindow::refresh()
 	while(!oldList.isEmpty())
 		delete oldList.takeFirst();
 	currentInscription = 0;
+	//trash old layout, and make new one
+	if(layout)
+		delete layout;
+	layout = new QVBoxLayout();
+	setLayout(layout);
 	//generate InscriptionWidgets to accommodate surfTrans, and surfImgs
 	//imgsIndex = 0; transIndex = 0;
 	int imgsIndex = 0; //index to QList of InscriptionImgs in surfImgs
@@ -79,7 +82,6 @@ void TranscriptionWindow::refresh()
 	if(currentInscription == surfTrans->count())
 		appendInscrWidget->setCurrent(true);
 	layout->addWidget(appendInscrWidget);
-	update(); //play around with this to see if we need it?
 }
 
 void TranscriptionWindow::toggleCanHaveImg()

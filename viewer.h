@@ -26,6 +26,9 @@ public:
 			//requests DbHandler to query surfaces
 			//sets up GUI
 			//advances to first surface
+public slots:
+	void statusUpdate(); //write status bar text. TODO: make private?
+	void setModified(); //sets modified to true, connect to signals in imageLabel and TranscriptionWindow
 private slots:
 	void advance(); //if in SURFACE mode
 		//requests DbHandler to advance to next surface
@@ -33,6 +36,7 @@ private slots:
 		//and sets image in imageLabel.
 	void back();
 	//TODO advance(int jump), back(int jump), advanceTenPc(), moveLast(), etc.
+	void unlock();
 /* Almost certainly junk - DELETE
 	void refreshTransWindow(); //call transWidnow->refresh();
 			//connected to signals emitted by deleteCurrentBoxAction
@@ -40,7 +44,6 @@ private slots:
 */
 
 private:
-	//TODO update status bar
 //functions to set up UI
 	void createActions();
 	void createMenus();
@@ -98,6 +101,9 @@ private:
 	TranscriptionWindow* transWindow; 	//widget for displaying and editing 
 													//sets of transcriptions.
 	QDockWidget* dock;// dock window for the TranscriptinWindow.
+	bool locked; //prevents any modification TODO: differnet kinds of locks, e.g. that allo
+		//addition but not deletion...
+	bool modified; //true if either surf or trans has been modified since last save
 }; 
 
 #endif

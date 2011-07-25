@@ -23,7 +23,7 @@ Viewer::Viewer()
 	imageLabel = new ImageLabel(this, &surf); //surf is passed as pointer
 			//so that imageLabel can manipulate it.
 
-	//create TranscriptionWindow as a dock widget
+	//create dock and scroll area for transWindow 
 	dock = new QDockWidget(this);
 	dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::TopDockWidgetArea);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
@@ -31,7 +31,6 @@ Viewer::Viewer()
 //	transScrollArea->setBackgroundRole(QPalette::Dark);
 	dock->setWidget(transScrollArea);
 
-	createStatusBar();
 	createActions();
 	createMenus();
 	createToolBars();
@@ -50,6 +49,10 @@ void Viewer::advance()
 		//TODO db.writeSurface(surf, trans);
 		db.nextSurface(); //stays put if already on last record
 		db.readSurface(surf, trans);
+
+		locked = true;
+		modified = false;
+
 		imageLabel->newSurf();
 		//delete old transcription window and create new one
 		if(transWindow) 
@@ -57,10 +60,13 @@ void Viewer::advance()
 		transWindow = new TranscriptionWindow(&trans, &surf);
 		//connect ImageLabel signals to transcription window slots
 		connect(imageLabel, SIGNAL(inscrImgListModified()), transWindow, SLOT(refresh()));
+		connect(imageLabel, SIGNAL(inscrImgListModified()), this, SLOT(setModified()));
 
-		//install transcription window in dock
+		//install transcription window in scroll area in dock
 		transScrollArea->setWidget(transWindow);
 		transWindow->show(); //or is it the dock that we need to show()???
+
+		statusUpdate();
 	}
 	//else do nothing
 }
@@ -72,6 +78,10 @@ void Viewer::back()
 		//TODO db.writeSurface(surf) //save current state
 		db.previousSurface(); //stays put if already on first record
 		db.readSurface(surf, trans);
+
+		locked = true;
+		modified = false;
+		
 		imageLabel->newSurf();
 		if(transWindow) 
 			delete transWindow;
@@ -79,7 +89,39 @@ void Viewer::back()
 		transScrollArea->setWidget(transWindow);
 		transWindow->refresh();
 		transWindow->show(); //or is it the dock that we need to show()???
+
+		statusUpdate();
 	}
+}
+
+void Viewer::unlock()
+{
+	//unlock imageLabel
+	imageLabel->unlock();
+	locked = false;
+	//TODO unlock transcription windows
+	statusUpdate();
+}
+
+void Viewer::statusUpdate()
+{
+	QString statusText;
+	statusText += QString(
+		"surface: %1, surface type: %2 | zoom = x%3, rotation = %4 | mode = %5 | %6LOCKED%7")
+		.arg(trans.getPubId() + trans.getPubNumber())
+		.arg(trans.getSurfaceType())
+		.arg(imageLabel->getZoom())
+		.arg(imageLabel->getRotation())
+		.arg(imageLabel->getModeName())
+		.arg(locked ? "" : "UN")
+		.arg(modified ? " | MODIFIED" : "");
+	statusBar()->showMessage(statusText);
+}
+
+void Viewer::setModified()
+{
+	modified = true;
+	statusUpdate();
 }
 
 void Viewer::createActions()
@@ -104,14 +146,16 @@ void Viewer::createActions()
 	modeDownAction = new QAction(tr("Mode Down"), this);
 	modeDownAction->setShortcut(tr("Ctrl+Space"));
 	connect(modeDownAction, SIGNAL(triggered()), imageLabel, SLOT(modeDown()));
+	connect(modeDownAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	modeUpAction = new QAction(tr("Mode Up"), this);
 	modeUpAction->setShortcut(tr("Escape"));
 	connect(modeUpAction, SIGNAL(triggered()), imageLabel, SLOT(modeUp()));
+	connect(modeUpAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	unlockAction = new QAction(tr("&Unlock"), this);
 	unlockAction->setShortcut(tr("Ctrl+U"));
-	connect(unlockAction, SIGNAL(triggered()), imageLabel, SLOT(unlock()));
+	connect(unlockAction, SIGNAL(triggered()), this, SLOT(unlock()));
 
 	boxForwardAction = new QAction(tr("Box &Forward"), this);
 	boxForwardAction->setShortcut(tr("]"));
@@ -125,30 +169,37 @@ void Viewer::createActions()
 		//TODO call to TranscriptionWindow::refresh()
 	deleteCurrentBoxAction->setShortcut(tr("Backspace"));
 	connect(deleteCurrentBoxAction, SIGNAL(triggered()), imageLabel, SLOT(deleteCurrentBox()));
+	connect(deleteCurrentBoxAction, SIGNAL(triggered()), this, SLOT(setModified()));
 
 	zoomInAction = new QAction(tr("&Zoom In"), this);
 	zoomInAction->setShortcut(tr("Ctrl++"));
 	connect(zoomInAction, SIGNAL(triggered()), imageLabel, SLOT(zoomIn()));
+	connect(zoomInAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	zoomOutAction = new QAction(tr("Zoom &Out"), this);
 	zoomOutAction->setShortcut(tr("Ctrl+-"));
 	connect(zoomOutAction, SIGNAL(triggered()), imageLabel, SLOT(zoomOut()));
+	connect(zoomOutAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	zoomRestoreAction = new QAction(tr("&Restore"), this);
 	zoomRestoreAction->setShortcut(tr("Ctrl+0"));
 	connect(zoomRestoreAction, SIGNAL(triggered()), imageLabel, SLOT(zoomRestore()));
+	connect(zoomRestoreAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateClockwiseAction = new QAction(tr("&Clockwise 5 deg"), this);
 	rotateClockwiseAction->setShortcut(tr("Ctrl+>"));
 	connect(rotateClockwiseAction, SIGNAL(triggered()), imageLabel, SLOT(rotateClockwise()));
+	connect(rotateClockwiseAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateAntiClockwiseAction = new QAction(tr("&Anticlockwise 5 deg"), this);
 	rotateAntiClockwiseAction->setShortcut(tr("Ctrl+<"));
 	connect(rotateAntiClockwiseAction, SIGNAL(triggered()), imageLabel, SLOT(rotateAntiClockwise()));
+	connect(rotateAntiClockwiseAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateRestoreAction = new QAction(tr("&Restore"), this);
 	rotateRestoreAction->setShortcut(tr("Ctrl+^"));
 	connect(rotateRestoreAction, SIGNAL(triggered()), imageLabel, SLOT(rotateRestore()));
+	connect(rotateRestoreAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	toggleIndexNumbersAction = new QAction(tr("&Toggle Index Numbers"), this);
 	toggleIndexNumbersAction->setShortcut(tr("Ctrl+I"));
@@ -194,10 +245,13 @@ void Viewer::createToolBars()
 	toolBar->addAction(rotateClockwiseAction);
 	toolBar->addAction(rotateAntiClockwiseAction);
 }
-
+/*
+DELETE?
 void Viewer::createStatusBar()
 {
 	QFont statusBarFont = (QString("HuaDong"));
 	statusBar()->setFont(statusBarFont);
 	statusBar()->showMessage(tr("This is the status bar"));
 }
+
+*/

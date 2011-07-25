@@ -62,11 +62,12 @@ public slots:
 		//refresh() should be called as a slot by a signal emitted by ImageLabel::mouseUp. (i.e. on creation
 		//of new image bbox. Also called on ImageLabel::deleteBox.
 private:
-	QVBoxLayout* layout; //top-level layout for widget
+	//variables
 	SurfaceTranscription* surfTrans;
 	int currentInscription; //index of current inscription label (incl. append inscription label)
 	QLabel inscrImgLabel; //hold img of current inscription if there is one.
 	const SurfaceImgs* const surfImgs;
+	QVBoxLayout* layout; //top-level layout for widget
 };
 
 #endif

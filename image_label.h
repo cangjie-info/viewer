@@ -26,7 +26,10 @@ public:
 	void newSurf(); //gets image from disk, sets mode to 
 			//SURFACE, resets display
 	void reset(); //sets view after change of mode or new surface.
-	Mode getMode(); //returns current value of mode
+	Mode getMode() const; //returns current value of mode
+	QString getModeName() const; //returns name of mode as a string
+	double getZoom() const; //returns zoom
+	double getRotation() const ; //returns rotation
 
 public slots:
 	//the following are triggered by Viewer QActions.
@@ -83,7 +86,6 @@ private:
 	int currentBoxIndex;
 	int currentInscrIndex; //=0 on entry to INSCRIPTIONS mode
 				//stores current inscription index while in GRAPH mode
-	bool surfaceModified; //TRUE if modified but not saved
 	bool locked; //if locked, no rubber bands can be dragged or other changes made to box list
 };
 

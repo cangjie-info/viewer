@@ -22,6 +22,8 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 	else
 		numLabelText += QString("%1").arg(imgNumber);
 	numLabel->setText(numLabelText);
+	numLabel->setMaximumWidth(100);
+	numLabel->setMinimumWidth(100);
 	//add to layout
 	layout->addWidget(numLabel);
 	
@@ -30,11 +32,10 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 	QFont font("HuaDong");
 	font.setPixelSize(30);
 	transLabel->setFont(font);
+	transLabel->setAlignment(Qt::AlignLeft);
 //TODO if isCurrent, do something to make the widget look different
 	if(isCurrent)
 		setStyleSheet("background-color: white");
-	else
-		setStyleSheet("background-color: #");
 	//add to layout
 	layout->addWidget(transLabel);
 
@@ -45,6 +46,4 @@ void InscriptionWidget::setCurrent(bool isCurrent)
 {
 	if(isCurrent)
 		setStyleSheet("background-color: white");
-	else
-		setStyleSheet("background-color: grey");
 }
