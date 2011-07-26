@@ -31,7 +31,8 @@ public:
 	TranscriptionWindow(SurfaceTranscription* const trans, const SurfaceImgs* const imgs); //constructor
 		//creates surfaceLabel and calls refresh()
 //NO. PUT IN VIEWER.	void editCurrentInscription(); //creates new pop-up dialog to edit the current inscription
-	void toggleCanHaveImg();	//sets the current inscription's canHaveImage, 
+public slots:
+	void toggleCanHaveImage();	//sets the current inscription's canHaveImage, 
 		//modifies surfTrans (may require adding or deleting inscriptions)
 		//and calls refresh()
 	void nextInscription(); //increments currentInscription.
@@ -49,8 +50,7 @@ public:
 		//or to the inscription with the highest index
 		//currentInscription then points to the raised Inscription.
 	void lowerInscription(); //lowers the index of the current inscription.
-
-public slots:
+	void allCanHaveImage(); //sets can have image to TRUE for all inscriptions.
 	void refresh(); //implementation as a slot allows refresh() 
 		//to be called in reponse to relevant events
 		//like the insewrtion/deletion of an inscription bbox by ImageLabel. 
@@ -61,8 +61,12 @@ public slots:
 		//also adds an "append inscription" label.
 		//refresh() should be called as a slot by a signal emitted by ImageLabel::mouseUp. (i.e. on creation
 		//of new image bbox. Also called on ImageLabel::deleteBox.
+	void unlock(); //sets locked to true
+signals:
+	void inscrListModified(); //any changes to surfTrans
 private:
 	//variables
+	bool locked; //no changes to surfTrans can be made if locked
 	SurfaceTranscription* surfTrans;
 	int currentInscription; //index of current inscription label (incl. append inscription label)
 	QLabel inscrImgLabel; //hold img of current inscription if there is one.

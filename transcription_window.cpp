@@ -10,7 +10,8 @@ TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const Surf
 {
 	layout = new QVBoxLayout();
 	setLayout(layout);
-
+	locked = true;
+	currentInscription = 0;
 	//generate InscriptionLabels, etc. reflecting current state of surfTrans
 	refresh();
 }
@@ -23,7 +24,6 @@ void TranscriptionWindow::refresh()
 		delete oldList.takeFirst();
 
 	int windowHeight = 0; //sum the heights of the inscription labels, and use to set the height of the widget
-	currentInscription = 0;
 
 	//generate InscriptionWidgets to accommodate surfTrans, and surfImgs
 	//imgsIndex = 0; transIndex = 0;
@@ -78,23 +78,41 @@ inscrWidget->setMaximumHeight(inscrWidget->sizeHint().height());
 	setMinimumHeight(windowHeight);
 }
 
-void TranscriptionWindow::toggleCanHaveImg()
+void TranscriptionWindow::toggleCanHaveImage()
 {
-	if(currentInscription < 0 || currentInscription >= surfTrans->count())
+	if(locked || currentInscription < 0 || currentInscription >= surfTrans->count())
 	{
-		//do nothing - oor 
+		//do nothing - oor or locked
 	}
 	else
+	{
 		(*surfTrans)[currentInscription].setCanHaveImage(
 				!(*surfTrans)[currentInscription].getCanHaveImage());
-	refresh(); 	//unavoidable, despite the overhead, since the matching of 
+		emit inscrListModified();
+		refresh(); 	//unavoidable, despite the overhead, since the matching of 
 					//imgs with trans may have changed.
+	}
+}
+
+void TranscriptionWindow::allCanHaveImage() //sets can have image to TRUE for all inscriptions.
+{
+	if(locked)
+		return;
+	for(int index = 0; index < surfTrans->count(); index++)
+		(*surfTrans)[index].setCanHaveImage(true);
+	emit inscrListModified();
+	refresh();
+}
+
+void TranscriptionWindow::unlock()
+{
+	locked = false;
 }
 
 void TranscriptionWindow::nextInscription()
 {
 	//get list of inscription widgets
-	QList<InscriptionWidget*> inscriptionWidgetList = this->findChildren<InscriptionWidget*>();
+	QList<InscriptionWidget*> inscriptionWidgetList = this->findChildren<InscriptionWidget*>("IW");
 	//de-current current
 	inscriptionWidgetList[currentInscription]->setCurrent(false);
 	//increment current
@@ -108,7 +126,7 @@ void TranscriptionWindow::nextInscription()
 
 void TranscriptionWindow::prevInscription()
 {
-	QList<InscriptionWidget*> inscriptionWidgetList = this->findChildren<InscriptionWidget*>();
+	QList<InscriptionWidget*> inscriptionWidgetList = this->findChildren<InscriptionWidget*>("IW");
 	inscriptionWidgetList[currentInscription]->setCurrent(false);
 	currentInscription--;
 	if(currentInscription < 0)
@@ -121,35 +139,41 @@ void TranscriptionWindow::prevInscription()
 
 void TranscriptionWindow::deleteInscription()
 {
-	if(currentInscription < 0 || currentInscription >= surfTrans->count())
+	if(locked || currentInscription < 0 || currentInscription >= surfTrans->count())
 		return;
 	surfTrans->removeAt(currentInscription);
 	//NB currentInscription is still in range
+	emit inscrListModified();
 	refresh();
 }
 
 void TranscriptionWindow::insertInscription()
 {
-	if(currentInscription < 0 || currentInscription > surfTrans->count())
+	if(locked || currentInscription < 0 || currentInscription > surfTrans->count())
 		return; //NB can insert at "append new" insertion-point
 	surfTrans->insert(currentInscription, InscriptionTranscription());
 	//currentInscription is still in range, and points to the newly inserted 
 	//inscription
+	emit inscrListModified();
 	refresh();
 }
 
 void TranscriptionWindow::raiseInscription()
 {
-	if(currentInscription < 0 || currentInscription > surfTrans->count() - 1)
+	if(locked || currentInscription < 0 || currentInscription >= surfTrans->count() - 1)
 		return;
-	surfTrans->swap(currentInscription, ++currentInscription);
+	surfTrans->swap(currentInscription, currentInscription+1);
+	currentInscription++;
+	emit inscrListModified();
 	refresh();
 }
 
 void TranscriptionWindow::lowerInscription()
 {
-	if(currentInscription < 1 || currentInscription > surfTrans->count())
+	if(locked || currentInscription < 1 || currentInscription > surfTrans->count())
 		return;
-	surfTrans->swap(currentInscription, --currentInscription);
+	surfTrans->swap(currentInscription, currentInscription-1);
+	currentInscription--;
+	emit inscrListModified();
 	refresh();
 }

@@ -29,6 +29,8 @@ public:
 public slots:
 	void statusUpdate(); //write status bar text. TODO: make private?
 	void setModified(); //sets modified to true, connect to signals in imageLabel and TranscriptionWindow
+signals:
+	void unlockSignal();
 private slots:
 	void advance(); //if in SURFACE mode
 		//requests DbHandler to advance to next surface
@@ -76,13 +78,15 @@ private:
 	QAction* boxForwardAction; //advances box index
 	QAction* boxBackAction; //box back by one
 	QAction* deleteCurrentBoxAction; //deletes current boudning box
-	//TODO QAction* insertNullBoxAction; //inserts null box at current index
-				//so that it will not display, and will be recorded 
-				//as null in db on save
-				//does nothing if last box in list
-				//affects index numbers, but boxForward etc. skip over null boxes
-				//ON SECOND THOUGHTS - why not dispense with null boxes altogether
-				//and let the transcription window handle this???
+	QAction* toggleCanHaveImageAction; //toggles canHaveImage variable of currnet inscription
+	QAction* nextTransAction; //increments current transcription
+	QAction* prevTransAction; //decrements current transcription
+	QAction* deleteTransAction; //deletes current transcription
+	QAction* insertTransAction; //inserts transctption before current
+	QAction* raiseTransAction; //raises index number of current transcription
+	QAction* lowerTransAction; //lowers index number of current transcription
+	QAction* allCanHaveImageAction; //sets canHaveImage to true for all transcriptions
+
 	//TODO QAction* setCorpus; //sets WHERE clause for querying surfaces table
 //menus
 	QMenu* fileMenu;

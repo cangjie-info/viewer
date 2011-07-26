@@ -39,6 +39,7 @@ Viewer::Viewer()
 	imgScrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
 	imgScrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
 	setCentralWidget(imgScrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
+	
 	showMaximized();
 	advance(); // to move to the first surface and display it
 }
@@ -58,6 +59,19 @@ void Viewer::newSurf()
 		//connect ImageLabel signals to transcription window slots
 		connect(imageLabel, SIGNAL(inscrImgListModified()), transWindow, SLOT(refresh()));
 		connect(imageLabel, SIGNAL(inscrImgListModified()), this, SLOT(setModified()));
+		//connect Actions to transcription window slots
+		connect(toggleCanHaveImageAction, SIGNAL(triggered()), transWindow, SLOT(toggleCanHaveImage()));
+		connect(nextTransAction, SIGNAL(triggered()), transWindow, SLOT(nextInscription()));
+		connect(prevTransAction, SIGNAL(triggered()), transWindow, SLOT(prevInscription()));
+		connect(deleteTransAction, SIGNAL(triggered()), transWindow, SLOT(deleteInscription()));
+		connect(insertTransAction, SIGNAL(triggered()), transWindow, SLOT(insertInscription()));
+		connect(raiseTransAction, SIGNAL(triggered()), transWindow, SLOT(raiseInscription()));
+		connect(lowerTransAction, SIGNAL(triggered()), transWindow, SLOT(lowerInscription()));
+		connect(allCanHaveImageAction, SIGNAL(triggered()), transWindow, SLOT(allCanHaveImage()));
+		connect(this, SIGNAL(unlockSignal()), transWindow, SLOT(unlock()));
+		connect(this, SIGNAL(unlockSignal()), imageLabel, SLOT(unlock()));
+
+		connect(transWindow, SIGNAL(inscrListModified()), this, SLOT(setModified()));
 
 		//install transcription window in scroll area in dock
 		transScrollArea->setWidget(transWindow);
@@ -90,10 +104,9 @@ void Viewer::back()
 
 void Viewer::unlock()
 {
-	//unlock imageLabel
-	imageLabel->unlock();
+	//unlock imageLabel and transcription window by emitting unlock signal
+	emit unlockSignal();
 	locked = false;
-	//TODO unlock transcription windows
 	statusUpdate();
 }
 
@@ -130,15 +143,15 @@ void Viewer::createActions()
 	connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
 
 	advanceAction = new QAction(tr("&Advance"), this);
-	advanceAction->setShortcut(tr("Ctrl+a"));
+	advanceAction->setShortcut(tr("a"));
 	connect(advanceAction, SIGNAL(triggered()), this, SLOT(advance()));
 
 	backAction = new QAction(tr("&Back"), this);
-	backAction->setShortcut(tr("Ctrl+b"));
+	backAction->setShortcut(tr("b"));
 	connect(backAction, SIGNAL(triggered()), this, SLOT(back()));
 
 	modeDownAction = new QAction(tr("Mode Down"), this);
-	modeDownAction->setShortcut(tr("Ctrl+Space"));
+	modeDownAction->setShortcut(tr("Space"));
 	connect(modeDownAction, SIGNAL(triggered()), imageLabel, SLOT(modeDown()));
 	connect(modeDownAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
@@ -148,7 +161,7 @@ void Viewer::createActions()
 	connect(modeUpAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	unlockAction = new QAction(tr("&Unlock"), this);
-	unlockAction->setShortcut(tr("Ctrl+U"));
+	unlockAction->setShortcut(tr("U"));
 	connect(unlockAction, SIGNAL(triggered()), this, SLOT(unlock()));
 
 	boxForwardAction = new QAction(tr("Box &Forward"), this);
@@ -163,41 +176,72 @@ void Viewer::createActions()
 		//TODO call to TranscriptionWindow::refresh()
 	deleteCurrentBoxAction->setShortcut(tr("Backspace"));
 	connect(deleteCurrentBoxAction, SIGNAL(triggered()), imageLabel, SLOT(deleteCurrentBox()));
-	connect(deleteCurrentBoxAction, SIGNAL(triggered()), this, SLOT(setModified()));
 
 	zoomInAction = new QAction(tr("&Zoom In"), this);
-	zoomInAction->setShortcut(tr("Ctrl++"));
+	zoomInAction->setShortcut(tr("+"));
 	connect(zoomInAction, SIGNAL(triggered()), imageLabel, SLOT(zoomIn()));
 	connect(zoomInAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	zoomOutAction = new QAction(tr("Zoom &Out"), this);
-	zoomOutAction->setShortcut(tr("Ctrl+-"));
+	zoomOutAction->setShortcut(tr("-"));
 	connect(zoomOutAction, SIGNAL(triggered()), imageLabel, SLOT(zoomOut()));
 	connect(zoomOutAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	zoomRestoreAction = new QAction(tr("&Restore"), this);
-	zoomRestoreAction->setShortcut(tr("Ctrl+0"));
+	zoomRestoreAction->setShortcut(tr("0"));
 	connect(zoomRestoreAction, SIGNAL(triggered()), imageLabel, SLOT(zoomRestore()));
 	connect(zoomRestoreAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateClockwiseAction = new QAction(tr("&Clockwise 5 deg"), this);
-	rotateClockwiseAction->setShortcut(tr("Ctrl+>"));
+	rotateClockwiseAction->setShortcut(tr(">"));
 	connect(rotateClockwiseAction, SIGNAL(triggered()), imageLabel, SLOT(rotateClockwise()));
 	connect(rotateClockwiseAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateAntiClockwiseAction = new QAction(tr("&Anticlockwise 5 deg"), this);
-	rotateAntiClockwiseAction->setShortcut(tr("Ctrl+<"));
+	rotateAntiClockwiseAction->setShortcut(tr("<"));
 	connect(rotateAntiClockwiseAction, SIGNAL(triggered()), imageLabel, SLOT(rotateAntiClockwise()));
 	connect(rotateAntiClockwiseAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	rotateRestoreAction = new QAction(tr("&Restore"), this);
-	rotateRestoreAction->setShortcut(tr("Ctrl+^"));
+	rotateRestoreAction->setShortcut(tr("^"));
 	connect(rotateRestoreAction, SIGNAL(triggered()), imageLabel, SLOT(rotateRestore()));
 	connect(rotateRestoreAction, SIGNAL(triggered()), this, SLOT(statusUpdate()));
 
 	toggleIndexNumbersAction = new QAction(tr("&Toggle Index Numbers"), this);
-	toggleIndexNumbersAction->setShortcut(tr("Ctrl+I"));
+	toggleIndexNumbersAction->setShortcut(tr("i"));
 	connect(toggleIndexNumbersAction, SIGNAL(triggered()), imageLabel, SLOT(toggleIndexNumbers()));
+
+	toggleCanHaveImageAction = new QAction(tr("Toggle &No Image"), this);
+	toggleCanHaveImageAction->setShortcut(tr("n"));
+	//connect must follow creation of transWindow (et seq.)
+
+	nextTransAction = new QAction(tr("Next transcription"), this);
+	nextTransAction->setShortcut(Qt::Key_Down + Qt::ShiftModifier);
+	//ditto
+
+	prevTransAction = new QAction(tr("Previous transcription"), this);
+	prevTransAction->setShortcut(Qt::Key_Up + Qt::ShiftModifier);
+	//ditto
+
+	deleteTransAction = new QAction(tr("Delete transcription"), this);
+	deleteTransAction->setShortcut(Qt::ShiftModifier + Qt::Key_Backspace);
+	//ditto
+
+	insertTransAction = new QAction(tr("Insert transcription"), this);
+	insertTransAction->setShortcut(Qt::Key_Return);
+	//ditto
+
+	raiseTransAction = new QAction(tr("Raise current transcription index"), this);
+	raiseTransAction->setShortcut(Qt::Key_Down + Qt::ControlModifier);
+	//ditto
+
+	lowerTransAction = new QAction(tr("Lower current transcription index"), this);
+	lowerTransAction->setShortcut(Qt::Key_Up + Qt::ControlModifier);
+	//ditto
+
+	allCanHaveImageAction = new QAction(tr("All can have images"), this);
+	allCanHaveImageAction->setShortcut(tr("Ctrl+n"));
+	//ditto
 }
 
 void Viewer::createMenus()
@@ -215,6 +259,14 @@ void Viewer::createMenus()
 	editMenu->addAction(backAction);
 	editMenu->addAction(modeUpAction);
 	editMenu->addAction(modeDownAction);
+	editMenu->addAction(toggleCanHaveImageAction);
+	editMenu->addAction(nextTransAction);
+	editMenu->addAction(prevTransAction);
+	editMenu->addAction(deleteTransAction);
+	editMenu->addAction(insertTransAction);
+	editMenu->addAction(raiseTransAction);
+	editMenu->addAction(lowerTransAction);
+	editMenu->addAction(allCanHaveImageAction);
 
 	zoomMenu = menuBar()->addMenu(tr("&Zoom"));
 	zoomMenu->addAction(zoomInAction);

@@ -36,6 +36,8 @@ InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNu
 //TODO if isCurrent, do something to make the widget look different
 	if(isCurrent)
 		setStyleSheet("background-color: white");
+	else
+		setStyleSheet("");
 	//add to layout
 	layout->addWidget(transLabel);
 
@@ -46,4 +48,6 @@ void InscriptionWidget::setCurrent(bool isCurrent)
 {
 	if(isCurrent)
 		setStyleSheet("background-color: white");
+	else
+		setStyleSheet("");
 }

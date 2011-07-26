@@ -215,6 +215,7 @@ void ImageLabel::deleteCurrentBox()
 	case SURFACE:
 		*surf = BoundingBox(QPoint(0,0), QPoint(0,0), 0);
 		surf->deleteAllInscriptions(); //warn first?
+		emit inscrImgListModified(); //signal picked up by TranscriptionWindow
 		currentBoxIndex = -1;
 		break;
 	case INSCRIPTION:
@@ -251,7 +252,7 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 
 	//in case index numbers are visible, set font
 	QFont font;
-	font.setPixelSize(30); //TODO make font size dependent on resolution
+	font.setPixelSize(30/zoom); //TODO make font size dependent on resolution
 	painter.setFont(font);
 	painter.setPen(Qt::red);
 	//make a list of bounding boxes according to current mode
@@ -302,7 +303,7 @@ void ImageLabel::paintEvent(QPaintEvent* event)
 		//and add an (optional) index number
 		if(indexNumbersVisible)
 		{
-			painter.drawText(currentBox.left(), currentBox.top(), 50, 50, 
+			painter.drawText(currentBox.left(), currentBox.top(), 50/zoom, 50/zoom, 
 						Qt::AlignBottom,  QString("%1").arg(i+1)); //visible index, so base = 1, not zero
 		}
 		//return pen color to red (might be green)
@@ -366,6 +367,8 @@ void ImageLabel::mouseReleaseEvent(QMouseEvent* event)
 	case SURFACE:
 		surf->deleteAllInscriptions();
 		surf->setBox(rect.topLeft(), rect.bottomRight(), rotation/*, false*/);
+		currentBoxIndex = 0;
+		emit inscrImgListModified(); //picked up by TranscriptionWindow
 			//TODO FIX THIS!!
 		break;
 	case INSCRIPTION:
