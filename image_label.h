@@ -30,6 +30,7 @@ public:
 	QString getModeName() const; //returns name of mode as a string
 	double getZoom() const; //returns zoom
 	double getRotation() const ; //returns rotation
+	void getGraphImageList(const int imageIndex, QList<QImage>& imgList); //appends graph images to graphList
 
 public slots:
 	//the following are triggered by Viewer QActions.
@@ -59,6 +60,10 @@ protected:
 	void paintEvent(QPaintEvent* event); //reimplement paintEvent(?)
 
 private:
+	void rotateAndCrop(const QImage& startImg, const BoundingBox* box, QImage& endImg);
+		//sets endImg to cropped and rotated startImg
+		//TODO reimplement other methods using rotateAndCrop
+	
 	//rubberband selection
 	void mousePressEvent(QMouseEvent* event);
 	void mouseMoveEvent(QMouseEvent* event);

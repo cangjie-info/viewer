@@ -11,6 +11,7 @@
 #include <QMainWindow>
 #include <QScrollArea>
 #include <QDockWidget>
+#include <QDialog>
 #include "surface_imgs.h"
 #include "db_handler.h"
 #include "image_label.h"
@@ -39,6 +40,7 @@ private slots:
 	void back();
 	//TODO advance(int jump), back(int jump), advanceTenPc(), moveLast(), etc.
 	void unlock();
+	void editTranscription(); //opens dialog to edit currnet transcription
 /* Almost certainly junk - DELETE
 	void refreshTransWindow(); //call transWidnow->refresh();
 			//connected to signals emitted by deleteCurrentBoxAction
@@ -60,13 +62,14 @@ private:
 	QAction* advanceAction; //increment the row in the db if in SURFACE mode
 	QAction* backAction; 	//decrement the row in the db if in SURFACE mode
 									//TODO each saves the SURFACE to the db
+	QAction* unlockAction; //allows editing of surface
 	//TODO 
 //	QAction* saveAction; //save current state to db
 //	QAction* discardAction; //discard changes and reload
 
+	//actions related to imgs
 	QAction* modeDownAction; //SURFACE > INSCRIPTION or INSCRIPTION > GRAPH
 	QAction* modeUpAction; //GRAPH > INSCRIPTION or INSCRIPTION > SURFACE
-	QAction* unlockAction; //allows editing of surface
 	//TODO	QAction* saveThumbnailsAction; //save all current thumbnails to disk
 	QAction* zoomInAction; 	//image * 1+1/3
 	QAction* zoomOutAction;	//image * 3/4 
@@ -79,6 +82,8 @@ private:
 	QAction* boxBackAction; //box back by one
 	QAction* deleteCurrentBoxAction; //deletes current boudning box
 	QAction* toggleCanHaveImageAction; //toggles canHaveImage variable of currnet inscription
+
+	//actions related to transcriptions
 	QAction* nextTransAction; //increments current transcription
 	QAction* prevTransAction; //decrements current transcription
 	QAction* deleteTransAction; //deletes current transcription
@@ -86,6 +91,7 @@ private:
 	QAction* raiseTransAction; //raises index number of current transcription
 	QAction* lowerTransAction; //lowers index number of current transcription
 	QAction* allCanHaveImageAction; //sets canHaveImage to true for all transcriptions
+	QAction* editTranscriptionAction; //opens dialog window for editing a single insciption
 
 	//TODO QAction* setCorpus; //sets WHERE clause for querying surfaces table
 //menus

@@ -1,8 +1,8 @@
 #include "viewer.h"
-// #include "imagelabel.h"
 #include <QtGui>
 #include <QDebug>
 #include <QMessageBox>
+#include "edit_transcription_dialog.h"
 
 Viewer::Viewer()
 	: imageLabel(NULL), transWindow(NULL)
@@ -108,6 +108,30 @@ void Viewer::unlock()
 	emit unlockSignal();
 	locked = false;
 	statusUpdate();
+}
+
+void Viewer::editTranscription()
+{
+	int transcriptionIndex = transWindow->getCurrentTranscriptionIndex();
+	int imageIndex = transWindow->getCurrentImageIndex();
+	if(locked || 
+			transcriptionIndex == trans.count()) //index set to the "append" position)
+		return;
+//pass to the dialog 
+	// - one pointer to inscription transcription (read/write)
+	InscriptionTranscription* const pInscrTrans = &trans[transcriptionIndex];
+	
+	// - list of graph images (read only)
+	QList<QImage> imgList;
+	imageLabel->getGraphImageList(imageIndex, imgList);
+
+	EditTranscriptionDialog dialog(this, pInscrTrans, imgList);
+
+	if(dialog.exec())
+	{
+		modified = true;
+		statusUpdate();
+	}
 }
 
 void Viewer::statusUpdate()
@@ -242,6 +266,11 @@ void Viewer::createActions()
 	allCanHaveImageAction = new QAction(tr("All can have images"), this);
 	allCanHaveImageAction->setShortcut(tr("Ctrl+n"));
 	//ditto
+
+	editTranscriptionAction = new QAction(tr("&Edit inscription"), this);
+	editTranscriptionAction->setShortcut(tr("e"));
+	connect(editTranscriptionAction, SIGNAL(triggered()), this, SLOT(editTranscription()));
+
 }
 
 void Viewer::createMenus()
@@ -267,6 +296,7 @@ void Viewer::createMenus()
 	editMenu->addAction(raiseTransAction);
 	editMenu->addAction(lowerTransAction);
 	editMenu->addAction(allCanHaveImageAction);
+	editMenu->addAction(editTranscriptionAction);
 
 	zoomMenu = menuBar()->addMenu(tr("&Zoom"));
 	zoomMenu->addAction(zoomInAction);

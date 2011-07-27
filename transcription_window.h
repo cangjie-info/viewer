@@ -31,6 +31,9 @@ public:
 	TranscriptionWindow(SurfaceTranscription* const trans, const SurfaceImgs* const imgs); //constructor
 		//creates surfaceLabel and calls refresh()
 //NO. PUT IN VIEWER.	void editCurrentInscription(); //creates new pop-up dialog to edit the current inscription
+	int getCurrentTranscriptionIndex() const; //returns index of current inscription transcription
+	int getCurrentImageIndex() const; //returns the index of the image corresponding to the current transcription
+			//returns -1 if there is not corresponding image
 public slots:
 	void toggleCanHaveImage();	//sets the current inscription's canHaveImage, 
 		//modifies surfTrans (may require adding or deleting inscriptions)

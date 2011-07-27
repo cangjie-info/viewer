@@ -80,6 +80,40 @@ double ImageLabel::getRotation() const
 	return rotation;
 }
 
+void ImageLabel::getGraphImageList(const int imageIndex, QList<QImage>& imgList) 
+{
+	//check to see whether imageIndex is oor
+	if(imageIndex < 0 || imageIndex >= surf->inscriptionCount())
+		return;
+	
+	//get surface image
+	//since there is at least one inscription img, 
+	//there will certianly be a surface img
+	QImage surfImg;
+	rotateAndCrop(originalImage, surf, surfImg);
+
+	//get corresponding inscription image
+	QImage inscrImg;
+	rotateAndCrop(surfImg, surf->ptrInscrAt(imageIndex), inscrImg);
+
+	//for each graph
+	for(int graphIndex = 0; graphIndex < surf->ptrInscrAt(imageIndex)->count(); graphIndex++)
+	{
+		//get graph image
+		QImage graphImg;
+		rotateAndCrop(inscrImg, &(surf->ptrInscrAt(imageIndex)->at(graphIndex)), graphImg);
+		//append to list
+		imgList.append(graphImg);
+	}
+}
+void ImageLabel::rotateAndCrop(const QImage& startImg, const BoundingBox* box, QImage& endImg)
+{
+	QTransform tf;
+	tf.rotate(box->getRotation());
+	QRect selection = *box;
+	endImg = (startImg.transformed(tf)) . copy(selection);
+}
+
 void ImageLabel::modeDown()
 {
 	switch(mode)

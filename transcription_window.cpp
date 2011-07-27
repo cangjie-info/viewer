@@ -16,6 +16,17 @@ TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const Surf
 	refresh();
 }
 
+int TranscriptionWindow::getCurrentTranscriptionIndex() const
+{
+	return currentInscription;
+}
+
+int TranscriptionWindow::getCurrentImageIndex() const
+{
+	QList<InscriptionWidget*> oldList = this->findChildren<InscriptionWidget*>("IW");
+	return oldList.at(currentInscription)->getImageIndex();
+}
+
 void TranscriptionWindow::refresh()
 {
 	//remove all old InscriptionWidgets
@@ -51,7 +62,9 @@ void TranscriptionWindow::refresh()
 		InscriptionWidget* inscrWidget = new 
 					InscriptionWidget(this, trans, transIndex, imgNumber, false);
 		if(transIndex == currentInscription)
+		{
 			inscrWidget->setCurrent(true);
+		}
 			//TODO get corresponding inscription img and setPixmap on image QLabel
 		if(imgNumber != -2) //if we have accommodated an image (or already run out of imgs)
 			imgsIndex++;
@@ -69,7 +82,9 @@ inscrWidget->setMaximumHeight(inscrWidget->sizeHint().height());
 	InscriptionWidget* appendInscrWidget = new 
 				InscriptionWidget(this, "append new", surfTrans->count(), -1, false);
 	if(currentInscription == surfTrans->count())
+	{
 		appendInscrWidget->setCurrent(true);
+	}
 	windowHeight += appendInscrWidget->sizeHint().height();
 	layout->addWidget(appendInscrWidget);
 	

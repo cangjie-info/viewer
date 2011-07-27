@@ -4,7 +4,7 @@
 #include <QLabel>
 
 InscriptionWidget::InscriptionWidget(QWidget* parent, QString trans, int transNumber, int imgNumber, bool isCurrent)
-	: QWidget(parent)
+	: QWidget(parent), imgIndex(imgNumber)
 {
 	//set name
 	setObjectName("IW");
@@ -50,4 +50,9 @@ void InscriptionWidget::setCurrent(bool isCurrent)
 		setStyleSheet("background-color: white");
 	else
 		setStyleSheet("");
+}
+
+int InscriptionWidget::getImageIndex() const
+{
+	return imgIndex;
 }
