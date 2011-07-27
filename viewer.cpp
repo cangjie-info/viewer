@@ -120,7 +120,7 @@ void Viewer::editTranscription()
 //pass to the dialog 
 	// - one pointer to inscription transcription (read/write)
 	InscriptionTranscription* const pInscrTrans = &trans[transcriptionIndex];
-	
+trans[transcriptionIndex].report();	
 	// - list of graph images (read only)
 	QList<QImage> imgList;
 	imageLabel->getGraphImageList(imageIndex, imgList);
@@ -131,6 +131,7 @@ void Viewer::editTranscription()
 	{
 		modified = true;
 		statusUpdate();
+		transWindow->refresh();
 	}
 }
 
