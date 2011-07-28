@@ -33,6 +33,10 @@ public:
 	int getPositionInCorpus() const;
 		//returns ordinal position of current surface in corpus
 	bool readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const; //gets currentSurface via DbHandler
+        static int getGrapheme(QString searchString);
+                //tries to find grapheme in ec.signList corresponding to searchString
+                //for now, only searches name field
+                //returns grapheme id
 //TODO	bool writeSurface(const Surface* const pSurface); //writes currentSurface via DbHandler
 						//must delete all inscriptions and graphs from old version of surface
 						//use transaction
