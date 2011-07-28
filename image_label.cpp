@@ -80,7 +80,7 @@ double ImageLabel::getRotation() const
 	return rotation;
 }
 
-void ImageLabel::getGraphImageList(const int imageIndex, QList<QImage>& imgList) 
+void ImageLabel::getGraphImageList(const int imageIndex, QList<QImage>& imgList, const QSize size)
 {
 	//check to see whether imageIndex is oor
 	if(imageIndex < 0 || imageIndex >= surf->inscriptionCount())
@@ -102,6 +102,8 @@ void ImageLabel::getGraphImageList(const int imageIndex, QList<QImage>& imgList)
 		//get graph image
 		QImage graphImg;
 		rotateAndCrop(inscrImg, &(surf->ptrInscrAt(imageIndex)->at(graphIndex)), graphImg);
+                //fit to size keeping aspect ratio
+                graphImg = graphImg.scaled(size, Qt::KeepAspectRatio);
 		//append to list
 		imgList.append(graphImg);
 	}

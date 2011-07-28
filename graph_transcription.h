@@ -14,7 +14,8 @@ public:
 	void setGrapheme(int newGrapheme);
 	void report() const;
 	void setCanHaveImage(bool can); //set canHanveImage member variable
-	bool getCanHaveImage() const; //get canHaveImage member variable
+        void toggleCanHaveImage(); //toggles canHaveImage variable
+        bool getCanHaveImage() const; //get canHaveImage member variable
 private:
 	int markup; //from ec
 	int grapheme; //from ec

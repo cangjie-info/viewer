@@ -30,7 +30,8 @@ public:
 	QString getModeName() const; //returns name of mode as a string
 	double getZoom() const; //returns zoom
 	double getRotation() const ; //returns rotation
-	void getGraphImageList(const int imageIndex, QList<QImage>& imgList); //appends graph images to graphList
+        void getGraphImageList(const int imageIndex, QList<QImage>& imgList, QSize size);
+            //appends graph images to graphList, scaled to size, keeping aspect ratio
 
 public slots:
 	//the following are triggered by Viewer QActions.

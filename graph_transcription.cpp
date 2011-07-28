@@ -2,7 +2,7 @@
 #include "graph_transcription.h"
 
 GraphTranscription::GraphTranscription(int graphMarkup, int graphemeId)
-	: markup(graphMarkup), grapheme(graphemeId)
+        : markup(graphMarkup), grapheme(graphemeId), canHaveImage(false)
 { }
 
 int GraphTranscription::getMarkup() const
@@ -35,6 +35,10 @@ void GraphTranscription::report() const
 void GraphTranscription::setCanHaveImage(bool can)
 {
 	canHaveImage = can;
+}
+void GraphTranscription::toggleCanHaveImage()
+{
+    canHaveImage = !canHaveImage;
 }
 
 bool GraphTranscription::getCanHaveImage() const
