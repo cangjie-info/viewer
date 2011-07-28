@@ -64,6 +64,8 @@ private:
 	void rotateAndCrop(const QImage& startImg, const BoundingBox* box, QImage& endImg);
 		//sets endImg to cropped and rotated startImg
 		//TODO reimplement other methods using rotateAndCrop
+        bool confirmDelete(QString type); //Message box to confirm that consequent deletion
+            //of graph or inscription images is ok. "type" names the type of image.
 	
 	//rubberband selection
 	void mousePressEvent(QMouseEvent* event);
