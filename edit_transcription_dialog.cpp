@@ -21,10 +21,6 @@ EditTranscriptionDialog::EditTranscriptionDialog(
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(dialogMenuBar);
 
-    //help label
-    QLabel* helpLabel = new QLabel("Arrow keys to move edit point", this);
-    layout->addWidget(helpLabel);
-
     //graph label
     graphLabel = new QLabel();
     graphLabel->setFixedSize(100, 100);
@@ -48,10 +44,10 @@ EditTranscriptionDialog::EditTranscriptionDialog(
     connect(inputBox, SIGNAL(textChanged()), this, SLOT(processInput()));
 
     //standard buttons
-    okButton = new QPushButton("<h1>OK</h1>\nCtrl+Enter", this);
+    okButton = new QPushButton("OK\n(Ctrl+Enter)", this);
     connect(okButton, SIGNAL(clicked()), this, SLOT(okClicked())); //trans updated
     okButton->setFocusPolicy(Qt::NoFocus);
-    cancelButton = new QPushButton("<h1>Cancel</h1>\nEscape", this);
+    cancelButton = new QPushButton("Cancel\n(Escape)", this);
     connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject())); //trans not updated
     cancelButton->setFocusPolicy(Qt::NoFocus);
     //button layout

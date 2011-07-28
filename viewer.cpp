@@ -34,7 +34,6 @@ Viewer::Viewer()
 
     createActions();
     createMenus();
-    createToolBars();
     imgScrollArea = new QScrollArea(this);
     imgScrollArea->setBackgroundRole(QPalette::Dark); //assigns bground color accroding to theme
     imgScrollArea->setWidget(imageLabel);	//scrollArea holds the imageLabel
@@ -68,6 +67,7 @@ void Viewer::newSurf()
     connect(raiseTransAction, SIGNAL(triggered()), transWindow, SLOT(raiseInscription()));
     connect(lowerTransAction, SIGNAL(triggered()), transWindow, SLOT(lowerInscription()));
     connect(allCanHaveImageAction, SIGNAL(triggered()), transWindow, SLOT(allCanHaveImage()));
+    connect(copyTransAction, SIGNAL(triggered()), transWindow, SLOT(copyTrans()));
     connect(this, SIGNAL(unlockSignal()), transWindow, SLOT(unlock()));
     connect(this, SIGNAL(unlockSignal()), imageLabel, SLOT(unlock()));
 
@@ -108,6 +108,11 @@ void Viewer::unlock()
     emit unlockSignal();
     locked = false;
     statusUpdate();
+}
+
+void Viewer::toggleFullScreen()
+{
+    setWindowState(windowState() ^ Qt::WindowFullScreen);
 }
 
 void Viewer::editTranscription()
@@ -198,7 +203,6 @@ void Viewer::createActions()
     connect(boxBackAction, SIGNAL(triggered()), imageLabel, SLOT(reverseCurrentBoxIndex()));
 
     deleteCurrentBoxAction = new QAction(tr("&Delete box"), this);
-    //TODO call to TranscriptionWindow::refresh()
     deleteCurrentBoxAction->setShortcut(tr("Backspace"));
     connect(deleteCurrentBoxAction, SIGNAL(triggered()), imageLabel, SLOT(deleteCurrentBox()));
 
@@ -237,7 +241,7 @@ void Viewer::createActions()
     connect(toggleIndexNumbersAction, SIGNAL(triggered()), imageLabel, SLOT(toggleIndexNumbers()));
 
     toggleCanHaveImageAction = new QAction(tr("Toggle &No Image"), this);
-    toggleCanHaveImageAction->setShortcut(tr("n"));
+    toggleCanHaveImageAction->setShortcut(Qt::Key_N + Qt::ShiftModifier);
     //connect must follow creation of transWindow (et seq.)
 
     nextTransAction = new QAction(tr("Next transcription"), this);
@@ -253,7 +257,7 @@ void Viewer::createActions()
     //ditto
 
     insertTransAction = new QAction(tr("Insert transcription"), this);
-    insertTransAction->setShortcut(Qt::Key_Return);
+    insertTransAction->setShortcut(Qt::Key_Return + Qt::ShiftModifier);
     //ditto
 
     raiseTransAction = new QAction(tr("Raise current transcription index"), this);
@@ -272,6 +276,20 @@ void Viewer::createActions()
     editTranscriptionAction->setShortcut(tr("e"));
     connect(editTranscriptionAction, SIGNAL(triggered()), this, SLOT(editTranscription()));
 
+    toggleFullScreenAction = new QAction("&Full screen", this);
+    toggleFullScreenAction->setShortcut(Qt::Key_F11);
+    connect(toggleFullScreenAction, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
+
+    copyTransAction = new QAction("Du&plicate transcription", this);
+    copyTransAction->setShortcut(Qt::Key_C + Qt::ShiftModifier);
+
+    raiseBoxAction = new QAction("&Raise bounding box index", this);
+    raiseBoxAction->setShortcut(tr("Ctrl+]"));
+    connect(raiseBoxAction, SIGNAL(triggered()), imageLabel, SLOT(raiseBoxIndex()));
+
+    lowerBoxAction = new QAction("&Lower bounding box index", this);
+    lowerBoxAction->setShortcut(tr("Ctrl+["));
+    connect(lowerBoxAction, SIGNAL(triggered()), imageLabel, SLOT(lowerBoxIndex()));
 }
 
 void Viewer::createMenus()
@@ -298,6 +316,9 @@ void Viewer::createMenus()
     editMenu->addAction(lowerTransAction);
     editMenu->addAction(allCanHaveImageAction);
     editMenu->addAction(editTranscriptionAction);
+    editMenu->addAction(copyTransAction);
+    editMenu->addAction(raiseBoxAction);
+    editMenu->addAction(lowerBoxAction);
 
     zoomMenu = menuBar()->addMenu(tr("&Zoom"));
     zoomMenu->addAction(zoomInAction);
@@ -311,24 +332,5 @@ void Viewer::createMenus()
 
     viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(toggleIndexNumbersAction);
+    viewMenu->addAction(toggleFullScreenAction);
 }
-
-void Viewer::createToolBars()
-{
-    toolBar = addToolBar(tr("Tool Bar"));
-    toolBar->addAction(exitAction);
-    toolBar->addAction(zoomInAction);
-    toolBar->addAction(zoomOutAction);
-    toolBar->addAction(rotateClockwiseAction);
-    toolBar->addAction(rotateAntiClockwiseAction);
-}
-/*
-DELETE?
-void Viewer::createStatusBar()
-{
-	QFont statusBarFont = (QString("HuaDong"));
-	statusBar()->setFont(statusBarFont);
-	statusBar()->showMessage(tr("This is the status bar"));
-}
-
-*/

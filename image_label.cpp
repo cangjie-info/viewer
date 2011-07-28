@@ -489,6 +489,71 @@ void ImageLabel::rotateRestore()
     transformImage();
     update();
 }
+
+void ImageLabel::raiseBoxIndex()
+{
+    if(locked)
+        return;
+    switch(mode)
+    {
+    case SURFACE:
+        //do nothing
+        break;
+    case INSCRIPTION:
+        if(currentBoxIndex >= 0 &&
+           currentBoxIndex < surf->inscriptionCount() - 1) //not last in list
+        {
+            surf->swap(currentBoxIndex, currentBoxIndex + 1);
+            currentBoxIndex++;
+            emit inscrImgListModified(); //signal picked up by TranscriptionWindow
+        }
+        break;
+    case GRAPH:
+        if(currentBoxIndex >= 0 &&
+           currentBoxIndex < surf->ptrInscrAt(currentInscrIndex)->count() - 1) //not last in list
+        {
+            surf->ptrInscrAt(currentInscrIndex)->swap(currentBoxIndex,
+                                                            currentBoxIndex + 1);
+            currentBoxIndex++;
+            emit inscrImgListModified(); //signal picked up by TranscriptionWindow
+        }
+        break;
+    }
+    update();
+}
+
+void ImageLabel::lowerBoxIndex()
+{
+    if(locked)
+        return;
+    switch(mode)
+    {
+    case SURFACE:
+        //do nothing
+        break;
+    case INSCRIPTION:
+        if(currentBoxIndex >= 1 &&
+           currentBoxIndex < surf->inscriptionCount()) //not first in list
+        {
+            surf->swap(currentBoxIndex, currentBoxIndex - 1);
+            currentBoxIndex--;
+            emit inscrImgListModified(); //signal picked up by TranscriptionWindow
+        }
+        break;
+    case GRAPH:
+        if(currentBoxIndex >=1 &&
+           currentBoxIndex < surf->ptrInscrAt(currentInscrIndex)->count()) //not first in list
+        {
+            surf->ptrInscrAt(currentInscrIndex)->swap(currentBoxIndex,
+                                                            currentBoxIndex - 1);
+            currentBoxIndex--;
+            emit inscrImgListModified(); //signal picked up by TranscriptionWindow
+        }
+        break;
+    }
+    update();
+}
+
 /*
 void ImageLabel::saveThumbnails()
 {

@@ -73,6 +73,12 @@ InscriptionImgs* SurfaceImgs::ptrInscrAt(int index)
 	return &inscrImgsList[index];
 }
 
+void SurfaceImgs::swap(int i, int j)
+{
+    //oor checks should be done by caller!!
+        inscrImgsList.swap(i, j);
+}
+
 void SurfaceImgs::report() const
 {
 	qDebug() << "**** REPORT FOR SurfaceImgs ****";

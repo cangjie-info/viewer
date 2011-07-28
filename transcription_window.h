@@ -65,6 +65,7 @@ public slots:
 		//refresh() should be called as a slot by a signal emitted by ImageLabel::mouseUp. (i.e. on creation
 		//of new image bbox. Also called on ImageLabel::deleteBox.
 	void unlock(); //sets locked to true
+        void copyTrans(); //copies current inscription transcription and inserts it at the edit point
 signals:
 	void inscrListModified(); //any changes to surfTrans
 private:

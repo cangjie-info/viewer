@@ -192,3 +192,12 @@ void TranscriptionWindow::lowerInscription()
 	emit inscrListModified();
 	refresh();
 }
+
+void TranscriptionWindow::copyTrans()
+{
+    if(locked || currentInscription < 0 || currentInscription > surfTrans->count())
+        return;
+    surfTrans->insert(currentInscription, surfTrans->at(currentInscription));
+    emit inscrListModified();
+    refresh();
+}

@@ -53,6 +53,8 @@ public slots:
 //	void lock(); //sets locked to true
 	void unlock(); //sets locked to false
 //	bool isLocked(); //returns value of locked
+        void raiseBoxIndex(); //swaps current bbox with bbox of next higher index
+        void lowerBoxIndex(); //swaps current bbox with bbox of next lower index
 
 signals:
 	void inscrImgListModified();

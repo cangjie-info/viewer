@@ -31,6 +31,8 @@ public:
 	InscriptionImgs* ptrInscrAt(int index);  //returns a pointer
 				// to the insription at index. returns NULL pointer if index oor
 	void report() const;
+        void swap(int i, int j); //swaps inscription images at i and j
+            //does nothing if either is oor
 private:
 	QString imageFile; //path to image file in repository
 	QList<InscriptionImgs> inscrImgsList;

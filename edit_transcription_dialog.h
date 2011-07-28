@@ -38,6 +38,7 @@ private:
     //funtions to set up UI
     void createActions();
     void createMenus();
+
     //actions
     QAction* graphLeftAction;
     QAction* graphRightAction;
@@ -51,8 +52,6 @@ private:
     QMenuBar* dialogMenuBar;
     QMenu* fileMenu;
     QMenu* editMenu;
-
-
 
     //private data members
     QLabel* graphLabel; //holds image of current graph, or "no image"
