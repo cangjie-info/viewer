@@ -40,7 +40,8 @@ Viewer::Viewer()
     setCentralWidget(imgScrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
 
     showMaximized();
-    advance(); // to move to the first surface and display it
+    db.nextSurface(); //stays put if already on last record
+    newSurf(); //
 }
 
 void Viewer::newSurf()
@@ -75,7 +76,6 @@ void Viewer::newSurf()
 
     //install transcription window in scroll area in dock
     transScrollArea->setWidget(transWindow);
-
     transWindow->show(); //or is it the dock that we need to show()???
 
     statusUpdate();
@@ -85,20 +85,57 @@ void Viewer::advance()
 {
     if(imageLabel->getMode() == ImageLabel::SURFACE) //can only advance to a new surface from SURFACE mode
     {
-        //TODO db.writeSurface(surf, trans);
-        db.nextSurface(); //stays put if already on last record
-        newSurf();
+        if(modified)
+        {
+            QMessageBox msgBox(this);
+            msgBox.setText("Save or discard changes before moving to a new surface.");
+            msgBox.exec();
+        }
+        else
+        {
+            db.nextSurface(); //stays put if already on last record
+            newSurf();
+        }
     }
-    //else do nothing
 }
 
 void Viewer::back()
 {
     if(imageLabel->getMode() == ImageLabel::SURFACE)
     {
-        //TODO db.writeSurface(surf) //save current state
-        db.previousSurface(); //stays put if already on first record
-        newSurf();
+        if(modified)
+        {
+            QMessageBox msgBox(this);
+            msgBox.setText("Save or discard changes before moving to a new surface.");
+            msgBox.exec();
+        }
+        else
+        {
+            db.previousSurface(); //stays put if already on first record
+            newSurf();
+        }
+    }
+}
+
+void Viewer::save()
+{
+    //db.writeSurface(surf, trans);
+    modified = false;
+    statusUpdate();
+}
+
+void Viewer::discardChanges()
+{
+    if(modified)
+    {
+        //confirm
+        QMessageBox msgBox(this);
+        msgBox.setText("This will discard all changes made to this surface.");
+        msgBox.setInformativeText("OK to proceed?");
+        msgBox.setStandardButtons(QMessageBox::Cancel | QMessageBox::Ok);
+        msgBox.setIcon(QMessageBox::Warning);
+        if(msgBox.exec() == QMessageBox::Ok)
+            newSurf();
     }
 }
 
@@ -290,12 +327,22 @@ void Viewer::createActions()
     lowerBoxAction = new QAction("&Lower bounding box index", this);
     lowerBoxAction->setShortcut(tr("Ctrl+["));
     connect(lowerBoxAction, SIGNAL(triggered()), imageLabel, SLOT(lowerBoxIndex()));
+
+    discardChangesAction = new QAction("&Discard changes and reload", this);
+    discardChangesAction->setShortcut(tr("Ctrl+Shift+X"));
+    connect(discardChangesAction, SIGNAL(triggered()), this, SLOT(discardChanges()));
+
+    saveAction = new QAction("&Save changes to database", this);
+    saveAction->setShortcut(tr("Ctrl+S"));
+    connect(saveAction, SIGNAL(triggered()), this, SLOT(save()));
 }
 
 void Viewer::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(exitAction);
+    fileMenu->addAction(discardChangesAction);
+    fileMenu->addAction(saveAction);
     //	fileMenu->addAction(saveThumbnailsAction);
 
     editMenu = menuBar()->addMenu(tr("&Edit"));

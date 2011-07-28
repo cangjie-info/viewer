@@ -42,6 +42,8 @@ private slots:
     void unlock();
     void editTranscription(); //opens dialog to edit currnet transcription
     void toggleFullScreen();
+    void save(); //writes surface to db
+    void discardChanges(); //discards all changes and reloads surface from db
 
 private:
     void newSurf(); //reads surface from db
@@ -55,12 +57,10 @@ private:
     QAction* exitAction; //quit application
     QAction* advanceAction; //increment the row in the db if in SURFACE mode
     QAction* backAction; 	//decrement the row in the db if in SURFACE mode
-    //TODO each saves the SURFACE to the db
     QAction* unlockAction; //allows editing of surface
     QAction* toggleFullScreenAction;
-    //TODO
-    //	QAction* saveAction; //save current state to db
-    //	QAction* discardAction; //discard changes and reload
+    QAction* saveAction; //save current state to db
+    QAction* discardChangesAction; //discard changes and reload from db
 
     //actions related to imgs
     QAction* modeDownAction; //SURFACE > INSCRIPTION or INSCRIPTION > GRAPH
