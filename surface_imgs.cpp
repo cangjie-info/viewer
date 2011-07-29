@@ -63,11 +63,11 @@ InscriptionImgs SurfaceImgs::inscrAt(int index) const
 	return inscrImgsList.at(index);
 }
 
-InscriptionImgs* SurfaceImgs::ptrInscrAt(int index) 
+InscriptionImgs* SurfaceImgs::ptrInscrAt(int index)
 {
 	if(index < 0 || index >= inscrImgsList.count())
 	{
-		qDebug() << "index oor in SurfaceImgs::inscrImgAt";
+                qDebug() << "index oor in SurfaceImgs::ptrInscrAt";
 		return NULL;
 	}
 	return &inscrImgsList[index];

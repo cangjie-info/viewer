@@ -79,10 +79,8 @@ int DbHandler::getPositionInCorpus() const
         return -1; //if corpus has not been set
 }
 
-bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const
+void DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const
 {
-    if(!pCorpusQuery) //corpus has not been set
-        return false;
     //clear both lists of inscriptions (which deletes graphs too)
     surf.deleteAllInscriptions();
     trans.clear();
@@ -166,21 +164,192 @@ bool DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
                 trans[0][0].setCanHaveImage(false);
         }
     }
-    return true;
 }
+
+void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
+{
+    db.transaction(); //begin transaction
+    QString surfaceId = pCorpusQuery->value(0).toString();
+
+    //*** SURFACE ***//
+
+    //UPDATE bbox in ec.surface
+    QString surfaceUpdateString = QString(
+            "UPDATE surfaces SET x1=%1, y1=%2, x2=%3, y2=%4, rotation=%5 WHERE id=%6;")
+            .arg(imgs.x())  //x1
+            .arg(imgs.y())  //y1
+            .arg(imgs.x()+imgs.width())     //x2
+            .arg(imgs.y()+imgs.height())    //y2
+            .arg(imgs.getRotation())        //rotation
+            .arg(surfaceId); //id
+    QSqlQuery surfaceUpdateQuery;
+    if(!surfaceUpdateQuery.exec(surfaceUpdateString))
+    {
+        db.rollback(); //handle as error!!
+        return;
+    }
+
+    //*** DELETE OLD INSCRIPTIONS AND GRAPHS ***//
+
+    //DELETE query for corresponding inscriptions and graphs
+    QString inscriptionDeleteString = QString(
+            "DELETE inscriptions, inscriptionGraphs "
+            "FROM inscriptions INNER JOIN inscriptionGraphs "
+            "WHERE inscriptions.surfaceId=%1 "
+            "AND inscriptions.id=inscriptionGraphs.inscriptionId;")
+            .arg(surfaceId); //surface id
+    QSqlQuery inscriptionDeleteQuery;
+    if(!inscriptionDeleteQuery.exec(inscriptionDeleteString))
+    {
+        db.rollback();
+        return;
+    }
+
+    //*** INSERT NEW INSCIRPTIONS AND GRAPHS ***//
+
+    //for each inscription in trans, INSERT inscription,
+    //then INSERT inscription graphs
+    int imgsIndex = -1; //increment on encounterin each image
+    for(int transIndex = 0; transIndex < trans.count(); transIndex++)
+    {
+
+        //*** NEW INSCRIPTION ***//
+
+        QString insertInscriptionString = QString(
+                "INSERT INTO inscriptions "
+                "SET serialNumber=%1, "
+                    "surfaceId=%2")
+                .arg(transIndex + 1) //1-based index in ec, not zero based
+                .arg(surfaceId);
+        bool inscrHasImage = false;
+        if(imgsIndex < imgs.inscriptionCount() && trans[transIndex].getCanHaveImage())
+            //inscription has an img
+        {
+            inscrHasImage = true;
+            imgsIndex++;
+            int x1 = imgs.ptrInscrAt(imgsIndex)->x();
+            int y1 = imgs.ptrInscrAt(imgsIndex)->y();
+            int x2 = x1 + imgs.ptrInscrAt(imgsIndex)->width();
+            int y2 = y1 + imgs.ptrInscrAt(imgsIndex)->height();
+            int rotation = imgs.ptrInscrAt(imgsIndex)->getRotation();
+
+            insertInscriptionString += QString(
+                    ", x1=%1, y1=%2, x2=%3, y2=%4, rotation=%5")
+                    .arg(x1).arg(y1).arg(x2).arg(y2).arg(rotation);
+        }
+        else
+        {
+            //nothing to do - db will provide default NULL values
+        }
+        insertInscriptionString += ";";
+        QSqlQuery insertInscriptionQuery;
+        if(!insertInscriptionQuery.exec(insertInscriptionString))
+        {
+            db.rollback();
+            return;
+        }
+
+        //*** NEW GRAPHS FOR LAST INSCRIRPTION ***//
+
+        //INSERT graphs for the inscription just inserted if there are any
+        //number of rows = maximum of trans[transIndex].count() and imgs.ptrInscAt(imgsIndex)->count()
+        int numberOfGraphs;
+        if(inscrHasImage)
+        {
+            numberOfGraphs = (trans[transIndex].count() > imgs.ptrInscrAt(imgsIndex)->boxCount()
+                            ? trans[transIndex].count() : imgs.ptrInscrAt(imgsIndex)->boxCount());
+        }
+        else //no image, only transcription or nothing
+        {
+            numberOfGraphs = trans[transIndex].count();
+        }
+        if(numberOfGraphs == 0)
+        {
+            //no need for INSERT query - do nothing
+        }
+        else
+        {
+            int inscriptionId = insertInscriptionQuery.lastInsertId().toInt();
+            int graphImgsIndex = 0;
+            //this should return the autonumber field inscriptions.id
+            QString insertGraphsString = QString(
+                    "INSERT INTO inscriptionGraphs "
+                    "(inscriptionId, graphNumber, x1, y1, x2, y2, rotation, markup, graphemeId) "
+                    "VALUES ");             //in format (1, 2, 3, 4, 5, 6, 7, 8, 9), ...(...);
+            for (int graphIndex = 0; graphIndex < numberOfGraphs; graphIndex++)
+            {
+                QString x1, y1, x2, y2, rotation;
+                int markup, graphemeId;
+                //if imgs are left && (no trans left || canHaveImage) => row has graph image
+                if(inscrHasImage
+                    && graphImgsIndex < imgs.ptrInscrAt(imgsIndex)->boxCount() //imgs are left
+                    && (
+                        graphIndex >= trans[transIndex].count() //no trans left
+                        || trans[transIndex][graphIndex].getCanHaveImage() == true) ) //can have image
+                    //the last term in the boolean is only evaluated if there are trans left
+                { //get bbox and add to query, increment graphsImgsIndex
+                    BoundingBox graphBox = imgs.ptrInscrAt(imgsIndex)->at(graphImgsIndex);
+                    x1.setNum( graphBox.x() );
+                    y1.setNum( graphBox.y() );
+                    x2.setNum( graphBox.x() + graphBox.width() );
+                    y2.setNum( graphBox.y() + graphBox.height() );
+                    rotation.setNum( graphBox.getRotation() );
+                    graphImgsIndex++;
+                }
+                else //NULL bbox
+                {
+                    x1 = "NULL";
+                    y1 = "NULL";
+                    x2 = "NULL";
+                    y2 = "NULL";
+                    rotation = "NULL";
+                }
+                //if trans left
+                if(graphIndex < trans[transIndex].count())
+                {
+                    //get markup and graphemeId and add to query
+                    markup = trans[transIndex][graphIndex].getMarkup();
+                    graphemeId = trans[transIndex][graphIndex].getGrapheme();
+                }
+                else // no more trans graphs
+                {
+                    markup = 0;
+                    graphemeId = 0;
+                }
+                QString values = QString("(%1, %2, %3, %4, %5, %6, %7, %8, %9)")
+                                 .arg(inscriptionId)
+                                 .arg(graphIndex + 1) //one-based, not zero-based in ec
+                                 .arg(x1).arg(y1).arg(x2).arg(y2)
+                                 .arg(rotation)
+                                 .arg(markup)
+                                 .arg(graphemeId);
+                if(graphIndex != 0)
+                    values.prepend(", ");
+                insertGraphsString += values;
+            }
+            insertGraphsString += ";"; //query string finished
+            QSqlQuery insertGraphsQuery;
+            if(!insertGraphsQuery.exec(insertGraphsString))
+            {
+                db.rollback();
+                return;
+            }
+        }
+    }
+    db.commit(); //done - yeay!
+}
+
 int DbHandler::getGrapheme(QString searchString) //static
 {
     //assume searchString is a name
-    qDebug() << searchString;
     QSqlQuery signListQuery;
     QString queryString = QString("SELECT id FROM signList WHERE name=\"%1\";")
-               .arg(searchString);
-    qDebug() << queryString;
+                          .arg(searchString);
     signListQuery.exec(queryString);
     if(signListQuery.first())
         return signListQuery.value(0).toInt();
     else
-       return 0;
+        return 0;
 }
 //tries to find grapheme in ec.signList corresponding to searchString
 //for now, only searches name field

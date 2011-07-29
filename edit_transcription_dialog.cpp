@@ -2,7 +2,6 @@
 #include <QPixmap>
 #include <QVBoxLayout>
 #include <QKeyEvent>
-#include <QDebug>
 #include "db_handler.h"
 
 EditTranscriptionDialog::EditTranscriptionDialog(
@@ -216,7 +215,6 @@ void EditTranscriptionDialog::okClicked()
 {
     *trans = transCopy;
     done(1);
-    qDebug() << "okClicked()";
 }
 
 void EditTranscriptionDialog::processInput()

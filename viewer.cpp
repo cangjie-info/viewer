@@ -119,7 +119,7 @@ void Viewer::back()
 
 void Viewer::save()
 {
-    //db.writeSurface(surf, trans);
+    db.writeSurface(surf, trans);
     modified = false;
     statusUpdate();
 }
@@ -162,7 +162,6 @@ void Viewer::editTranscription()
     //pass to the dialog
     // ITEM - one pointer to inscription transcription (read/write)
     InscriptionTranscription* const pInscrTrans = &trans[transcriptionIndex];
-    trans[transcriptionIndex].report();
     // ITEM - list of graph images (read only)
     QList<QImage> imgList;
     imageLabel->getGraphImageList(imageIndex, imgList, QSize(100, 100));

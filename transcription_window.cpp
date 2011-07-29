@@ -3,7 +3,6 @@
 #include <QWidget>
 #include <QChar>
 #include <QVBoxLayout>
-#include <QDebug>
 
 TranscriptionWindow::TranscriptionWindow(SurfaceTranscription* trans, const SurfaceImgs* const imgs)
     : surfTrans(trans), surfImgs(imgs), layout(NULL)

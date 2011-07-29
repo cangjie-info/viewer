@@ -153,8 +153,6 @@ void ImageLabel::modeDown()
                 currentBoxIndex = 0;
             else
                 currentBoxIndex = -1;
-            qDebug() << "modeDown() - currentBoxIndex = " << currentBoxIndex
-                    << "currentInscrIndex =" << currentInscrIndex;
             reset();
         }
         break;
@@ -202,8 +200,6 @@ void ImageLabel::advanceCurrentBoxIndex()
         currentBoxIndex++;	//advance index by one
         if(currentBoxIndex >= surf->inscriptionCount())
             currentBoxIndex = 0;	//wrap around if necessary
-        qDebug() << "currentBoxIndex =" << currentBoxIndex
-                << ", surf->inscriptionCount() =" << surf->inscriptionCount();
         update();
         break;
     case GRAPH:

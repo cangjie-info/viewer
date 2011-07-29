@@ -28,7 +28,7 @@ public:
 	int inscriptionCount() const; //returns number of inscripitons on surface
 	InscriptionImgs inscrAt(int index) const; //returns (value) the inscription at index
 			//returns a zero inscripion if index oor.
-	InscriptionImgs* ptrInscrAt(int index);  //returns a pointer
+        InscriptionImgs* ptrInscrAt(int index);  //returns a pointer
 				// to the insription at index. returns NULL pointer if index oor
 	void report() const;
         void swap(int i, int j); //swaps inscription images at i and j
