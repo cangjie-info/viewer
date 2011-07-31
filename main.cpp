@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QDebug>
 #include "viewer.h"
+#include "graph_viewer.h"
 
 int main(int argc, char** argv)
 {
@@ -12,5 +13,9 @@ int main(int argc, char** argv)
 	
 	Viewer viewer;
 	viewer.show();
+
+        GraphViewer gv;
+        gv.show();
+
 	return app.exec(); 
 }

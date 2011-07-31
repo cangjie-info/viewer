@@ -109,6 +109,8 @@ void ImageLabel::getGraphImageList(const int imageIndex, QList<QImage>& imgList,
         imgList.append(graphImg);
     }
 }
+
+//TODO replace with funciton in CangjieImg::
 void ImageLabel::rotateAndCrop(const QImage& startImg, const BoundingBox* box, QImage& endImg)
 {
     QTransform tf;

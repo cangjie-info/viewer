@@ -93,6 +93,14 @@ void EditTranscriptionDialog::createActions()
     insertGraphAction = new QAction("&Insert graph(s) at edit point", this);
     insertGraphAction->setShortcut(Qt::Key_I);
     connect(insertGraphAction, SIGNAL(triggered()), this, SLOT(insertGraph()));
+
+    raiseGraphAction = new QAction("Raise graph index", this);
+    raiseGraphAction->setShortcut(Qt::Key_Right + Qt::ControlModifier);
+    connect(raiseGraphAction, SIGNAL(triggered()), this, SLOT(raiseGraph()));
+
+    lowerGraphAction = new QAction("Lower graph index", this);
+    lowerGraphAction->setShortcut(Qt::Key_Left + Qt::ControlModifier);
+    connect(lowerGraphAction, SIGNAL(triggered()), this, SLOT(lowerGraph()));
 }
 
 void EditTranscriptionDialog::createMenus()
@@ -110,6 +118,8 @@ void EditTranscriptionDialog::createMenus()
     editMenu->addAction(clearAllNullsAction);
     editMenu->addAction(deleteGraphAction);
     editMenu->addAction(insertGraphAction);
+    editMenu->addAction(raiseGraphAction);
+    editMenu->addAction(lowerGraphAction);
 }
 
 void EditTranscriptionDialog::graphLeft()
@@ -241,5 +251,35 @@ void EditTranscriptionDialog::processInput()
     else
     {
         //keep going
+    }
+}
+
+void EditTranscriptionDialog::raiseGraph()
+{
+    if(index<0 || index >= transCopy.count() - 1)
+    {
+        //index oor
+    }
+    else
+    {
+        transCopy.swap(index, index + 1);
+        ++index;
+        refreshGraph();
+        refreshTrans();
+    }
+}
+
+void EditTranscriptionDialog::lowerGraph()
+{
+    if(index < 1 || index >= transCopy.count())
+    {
+        //index oor
+    }
+    else
+    {
+        transCopy.swap(index, index - 1);
+        --index;
+        refreshGraph();
+        refreshTrans();
     }
 }

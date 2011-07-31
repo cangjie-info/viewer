@@ -3,6 +3,7 @@
 #include "graph_transcription.h"
 
 InscriptionTranscription::InscriptionTranscription()
+    : canHaveImage(false)
 {
     //constructor
 }

@@ -2,6 +2,7 @@
 #define DB_HANDLER_H
 
 #include <QSqlQuery>
+#include <qimage.h>
 #include "surface_imgs.h"
 #include "surface_transcription.h"
 
@@ -40,6 +41,10 @@ public:
     void writeSurface(SurfaceImgs& surf, SurfaceTranscription& trans); //writes currentSurface via DbHandler
     //must delete all inscriptions and graphs from old version of surface
     //use transaction
+    static void findGraphemeInstances(QList<int>& graphIdList, const int grapheme);
+        //returns list of graphIds for the corresponding grapheme
+    static void getGraphImage(QImage& image, const int graphId, const int size);
+        //returns image of graph specified by graphId.
 private:
     //functions
     //data members

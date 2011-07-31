@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QVariant>
+#include "cangjie_img.h"
 
 DbHandler::DbHandler()
     : pCorpusQuery(NULL)
@@ -168,7 +169,7 @@ void DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 
 void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
 {
-    db.transaction(); //begin transaction
+db.transaction(); //begin transaction
     QString surfaceId = pCorpusQuery->value(0).toString();
 
     //*** SURFACE ***//
@@ -185,7 +186,7 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
     QSqlQuery surfaceUpdateQuery;
     if(!surfaceUpdateQuery.exec(surfaceUpdateString))
     {
-        db.rollback(); //handle as error!!
+  db.rollback(); //handle as error!!
         return;
     }
 
@@ -194,14 +195,14 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
     //DELETE query for corresponding inscriptions and graphs
     QString inscriptionDeleteString = QString(
             "DELETE inscriptions, inscriptionGraphs "
-            "FROM inscriptions INNER JOIN inscriptionGraphs "
-            "WHERE inscriptions.surfaceId=%1 "
-            "AND inscriptions.id=inscriptionGraphs.inscriptionId;")
+            "FROM inscriptions LEFT JOIN inscriptionGraphs "
+            "ON inscriptions.id=inscriptionGraphs.inscriptionId "
+            "WHERE inscriptions.surfaceId=%1;")
             .arg(surfaceId); //surface id
     QSqlQuery inscriptionDeleteQuery;
     if(!inscriptionDeleteQuery.exec(inscriptionDeleteString))
     {
-        db.rollback();
+    db.rollback();
         return;
     }
 
@@ -209,7 +210,7 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
 
     //for each inscription in trans, INSERT inscription,
     //then INSERT inscription graphs
-    int imgsIndex = -1; //increment on encounterin each image
+    int imgsIndex = -1; //increment on encountering each image
     for(int transIndex = 0; transIndex < trans.count(); transIndex++)
     {
 
@@ -222,7 +223,9 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
                 .arg(transIndex + 1) //1-based index in ec, not zero based
                 .arg(surfaceId);
         bool inscrHasImage = false;
-        if(imgsIndex < imgs.inscriptionCount() && trans[transIndex].getCanHaveImage())
+        if(imgs.inscriptionCount() > 0
+           && imgsIndex < imgs.inscriptionCount()-1
+            && trans[transIndex].getCanHaveImage())
             //inscription has an img
         {
             inscrHasImage = true;
@@ -245,7 +248,7 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
         QSqlQuery insertInscriptionQuery;
         if(!insertInscriptionQuery.exec(insertInscriptionString))
         {
-            db.rollback();
+db.rollback();
             return;
         }
 
@@ -331,12 +334,12 @@ void DbHandler::writeSurface(SurfaceImgs& imgs, SurfaceTranscription& trans)
             QSqlQuery insertGraphsQuery;
             if(!insertGraphsQuery.exec(insertGraphsString))
             {
-                db.rollback();
+        db.rollback();
                 return;
             }
         }
     }
-    db.commit(); //done - yeay!
+db.commit(); //done - yeay!
 }
 
 int DbHandler::getGrapheme(QString searchString) //static
@@ -354,3 +357,76 @@ int DbHandler::getGrapheme(QString searchString) //static
 //tries to find grapheme in ec.signList corresponding to searchString
 //for now, only searches name field
 //returns grapheme id
+
+void DbHandler::findGraphemeInstances(QList<int> &graphIdList, const int grapheme)
+{
+    QString queryString = QString("SELECT id FROM inscriptionGraphs WHERE graphemeId=%1;")
+                          .arg(grapheme);
+
+    QSqlQuery query;
+    query.exec(queryString);
+    while(query.next())
+    {
+        graphIdList.append(query.value(0).toInt());
+    }
+}
+
+void DbHandler::getGraphImage(QImage& graphImage, const int graphId, const int size)
+{
+    //query graphId (with inner joins to inscriptions and surfaces)
+    QString queryString = QString("SELECT surfaces.imageFile, "   //0
+                                  "surfaces.x1, surfaces.y1, "  //1, 2
+                                  "surfaces.x2, surfaces.y2, "  //3, 4
+                                  "surfaces.rotation, "         //5
+                                  "inscriptions.x1, inscriptions.y1, " //6, 7
+                                  "inscriptions.x2, inscriptions.y2, " //8, 9
+                                  "inscriptions.rotation, "     //10
+                                  "inscriptionGraphs.x1, inscriptionGraphs.y1, " //11, 12
+                                  "inscriptionGraphs.x2, inscriptionGraphs.y2, " //13, 14
+                                  "inscriptionGraphs.rotation " //15
+                                  "FROM inscriptionGraphs "
+                                  "INNER JOIN inscriptions "
+                                  "INNER JOIN surfaces "
+                                  "ON inscriptionGraphs.inscriptionId=inscriptions.id "
+                                  "AND inscriptions.surfaceId=surfaces.id "
+                                  "WHERE inscriptionGraphs.id=%1;"
+                                  ).arg(graphId);
+    QSqlQuery query;
+    qDebug() << queryString;
+    query.exec(queryString);
+    //if null image return black image
+    if(!query.next() || query.value(11).isNull())
+    {
+        graphImage = QImage();
+        return;
+    }
+    else
+    {
+        //get image file
+        QString fileName = query.value(0).toString();
+        fileName.prepend("/home/ads/repository/text_imgs/");
+        QImage image = QImage(fileName);
+        QImage surfaceImage;
+    //make surface image
+        CangjieImg::rotateAndCrop(image,
+            BoundingBox(QPoint(query.value(1).toInt(), query.value(2).toInt()),
+                        QPoint(query.value(3).toInt(), query.value(4).toInt()),
+                        query.value(5).toInt()),
+            surfaceImage);
+    //make inscription image
+        QImage inscriptionImage;
+        CangjieImg::rotateAndCrop(surfaceImage,
+            BoundingBox(QPoint(query.value(6).toInt(), query.value(7).toInt()),
+                        QPoint(query.value(8).toInt(), query.value(9).toInt()),
+                        query.value(10).toInt()),
+            inscriptionImage);
+    //make graph image
+        CangjieImg::rotateAndCrop(inscriptionImage,
+            BoundingBox(QPoint(query.value(11).toInt(), query.value(12).toInt()),
+                        QPoint(query.value(13).toInt(), query.value(14).toInt()),
+                        query.value(15).toInt()),
+            graphImage);
+    //adjust to size
+        graphImage = graphImage.scaled(QSize(size, size), Qt::KeepAspectRatio);
+    }
+}

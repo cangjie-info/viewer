@@ -31,6 +31,10 @@ private slots:
     void clearAllNulls(); //toggles all null images
     void deleteGraph(); //deletes graph at edit point
     void insertGraph(); //use input box to insert graph(s)
+    void raiseGraph(); //swap graph under edit point with graph
+        //of next higher index
+    void lowerGraph(); //swap grpah under edit point with
+            //graph of next lower index
 private:
     //methods
     void refreshTrans(); //sets text in transLabel
@@ -48,6 +52,8 @@ private:
     QAction* clearAllNullsAction;
     QAction* deleteGraphAction;
     QAction* insertGraphAction;
+    QAction* raiseGraphAction;
+    QAction* lowerGraphAction;
     //menu bar and menus
     QMenuBar* dialogMenuBar;
     QMenu* fileMenu;
