@@ -7,6 +7,9 @@
 Viewer::Viewer()
     : imageLabel(NULL), transWindow(NULL)
 {
+    //open config file
+    config = new ConfigHandler();
+
     //set up connection with db
     db = DbHandler();
     if(db.connect())
@@ -40,8 +43,27 @@ Viewer::Viewer()
     setCentralWidget(imgScrollArea); //makes scrollArea the central widget of the MainWindow (Viewer)
 
     showMaximized();
-    db.nextSurface(); //stays put if already on last record
+
+    db.moveToSurf(config->getLastSurf());
+
+//delete    db.nextSurface(); //stays put if already on last record
     newSurf(); //
+}
+
+void Viewer::closeEvent(QCloseEvent* event)
+{
+    if(modified)
+    {
+        QMessageBox msgBox(this);
+        msgBox.setText("Save or discard changes before closing.");
+        msgBox.exec();
+        event->ignore();
+        return;
+    }
+    config->setLastSurf(db.getPositionInCorpus());
+    config->save();
+    event->accept();
+
 }
 
 void Viewer::newSurf()
@@ -119,6 +141,7 @@ void Viewer::back()
 
 void Viewer::save()
 {
+//TODO    removeTrailingNulls;
     db.writeSurface(surf, trans);
     modified = false;
     statusUpdate();

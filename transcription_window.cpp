@@ -52,7 +52,7 @@ void TranscriptionWindow::refresh()
         }
         //transIndex in range
         //new InscriptionWidget
-        QString trans = (*surfTrans)[transIndex].getInscrString();
+        QString trans = (*surfTrans)[transIndex].getInscrString(-1, GraphTranscription::ALL_MARKUP);
         int imgNumber = imgsIndex; //image serial number for InscriptionWidget
         if(imgsIndex >= surfImgs->inscriptionCount())
             imgNumber = -1; //for blank=""

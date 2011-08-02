@@ -29,10 +29,12 @@ public:
     bool previousSurface();
     //move to previous record in corpusQuery
     //if no previous record, return false and stay on first record
+    void moveToSurf(int index); //moves to surface at index
     int getCorpusSize() const;
     //returns number of surfaces in corpus
     int getPositionInCorpus() const;
     //returns ordinal position of current surface in corpus
+    int getCurrentSurfaceId() const; //returns ec.surfaces.id
     void readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const; //gets currentSurface via DbHandler
     static int getGrapheme(QString searchString);
     //tries to find grapheme in ec.signList corresponding to searchString
@@ -45,6 +47,7 @@ public:
         //returns list of graphIds for the corresponding grapheme
     static void getGraphImage(QImage& image, const int graphId, const int size);
         //returns image of graph specified by graphId.
+    static void fixCracks();
 private:
     //functions
     //data members

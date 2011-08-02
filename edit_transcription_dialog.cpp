@@ -3,6 +3,7 @@
 #include <QVBoxLayout>
 #include <QKeyEvent>
 #include "db_handler.h"
+#include <QDebug>
 
 EditTranscriptionDialog::EditTranscriptionDialog(
         QWidget* parent,
@@ -189,7 +190,8 @@ void EditTranscriptionDialog::insertGraph()
 
 void EditTranscriptionDialog::refreshTrans()
 {
-    transLabel->setText(transCopy.getInscrString(index));
+    transLabel->setText(transCopy.getInscrString(index,
+                 GraphTranscription::ALL_MARKUP));
 }
 
 void EditTranscriptionDialog::refreshGraph()
@@ -210,7 +212,7 @@ void EditTranscriptionDialog::refreshGraph()
     //or
     else if(imgIndex >= imgList.count())	//no more graph images
         //clear pixmap and set text to ""
-        graphLabel->setText("");
+        graphLabel->setText("none");
     //or
     else
     {
@@ -233,16 +235,17 @@ void EditTranscriptionDialog::processInput()
     if(inputString.endsWith("\n"))
     {
         inputString = inputString.trimmed(); //removes white space incl. \n from each end
-        //do work
-        int grapheme = DbHandler::getGrapheme(inputString);
-        if(grapheme > 0)
+        QStringList inputList = inputString.split(" ");
+        foreach(QString str, inputList)
         {
-            transCopy.insert(index, GraphTranscription(0, grapheme));
-            transCopy[index].setCanHaveImage(true);
-            index++;
-            refreshGraph();
-            refreshTrans();
+
+            if(str.startsWith("%"))
+                processCommand(str);
+            else
+                processGraph(str);
         }
+        refreshGraph();
+        refreshTrans();
         inputBox->setText("I to begin.");
         inputBox->setFocusPolicy(Qt::NoFocus);
         this->setFocusPolicy(Qt::StrongFocus);
@@ -251,6 +254,81 @@ void EditTranscriptionDialog::processInput()
     else
     {
         //keep going
+    }
+}
+
+void EditTranscriptionDialog::processGraph(QString inputString)
+{
+    int grapheme = DbHandler::getGrapheme(inputString);
+    if(grapheme > 0)
+    {
+        transCopy.insert(index, GraphTranscription(0, grapheme));
+        transCopy[index].setCanHaveImage(true);
+        index++;
+    }
+}
+void EditTranscriptionDialog::processCommand(QString inputString)
+{
+    int separator = inputString.indexOf(":");
+    QString command = inputString.left(separator);
+    QString times;
+    if(separator == -1)
+        times = "1";
+    else
+        times = inputString.mid(separator+1);
+    qDebug() << command;
+    qDebug() << times;
+
+    if(command == "%u" || command =="%uncertain")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::GRAPH_UNCERTAIN);
+    }
+    else if(command =="%cn" || command == "%cracknumber")
+    {
+        for(int i = 0; i < times.toInt() && i < transCopy.count(); i++)
+        {
+            transCopy[index+i].setMarkup(
+                    transCopy[index+i].getMarkup() ^ GraphTranscription::CRACK_NUMBER);
+        }
+    }
+    else if(command == "%ed")
+    {
+        for(int j = 0; j < times.toInt() && j < transCopy.count(); j++)
+        {
+            transCopy[index + j].setMarkup(
+                    transCopy[index + j].getMarkup() ^ GraphTranscription::EDS_RESTORATION);
+        }
+    }
+    else if(command == "%hl")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::HEWEN_LEFT);
+        if(index < transCopy.count() - 1)
+            transCopy[index+1].setMarkup(
+                    transCopy[index+1].getMarkup() ^ GraphTranscription::HEWEN_RIGHT);
+    }
+    else if(command == "%hr")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::HEWEN_RIGHT);
+    }
+    else if(command == "%cl")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::CHONGWEN_LEFT);
+        if(index < transCopy.count() - 1)
+            transCopy[index+1].setMarkup(transCopy[index+1].getMarkup() ^ GraphTranscription::CHONGWEN_RIGHT);
+    }
+    else if(command == "%cr")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::CHONGWEN_RIGHT);
+    }
+    else if(command == "%fu" || command == "%unusual")
+    {
+        transCopy[index].setMarkup(
+                transCopy[index].getMarkup() ^ GraphTranscription::FORM_UNUSUAL);
     }
 }
 

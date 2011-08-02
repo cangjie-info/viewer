@@ -8,6 +8,18 @@ class GraphTranscription
 {
 public:
 	GraphTranscription(int graphMarkup, int graphemeId); //constructor
+        enum markupFlags {
+            NO_MARKUP = 0,
+            ALL_MARKUP = -1,
+            GRAPH_UNCERTAIN = 1,
+            CRACK_NUMBER = 2,
+            EDS_RESTORATION = 4,
+            HEWEN_LEFT = 8,
+            HEWEN_RIGHT = 16,
+            FORM_UNUSUAL = 32,
+            CHONGWEN_LEFT = 64,
+            CHONGWEN_RIGHT = 128,
+        };
 	int getMarkup() const;
 	void setMarkup(int newMarkup);
 	int getGrapheme() const;

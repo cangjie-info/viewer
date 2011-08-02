@@ -17,7 +17,7 @@ void InscriptionTranscription::report() const
     qDebug() << "END REPORT FOR InscriptionTranscription";
 }
 
-QString InscriptionTranscription::getInscrString(int index) const
+QString InscriptionTranscription::getInscrString(int index, int markupToggles) const
 {
     QString inscrString;
     QString graphString;
@@ -29,8 +29,34 @@ QString InscriptionTranscription::getInscrString(int index) const
             grapheme = 1001;
         graphString = QChar(57343 + at(i).getGrapheme());
         //offset 57343 = DFFF for Private Use Area
+
+        int markup = at(i).getMarkup() & markupToggles;
+
+        //mark graph uncertain
+        if(markup & GraphTranscription::GRAPH_UNCERTAIN)
+            markAsUncertain(graphString);
+
+        //mark graph as crack number
+        if(markup & GraphTranscription::CRACK_NUMBER)
+            markAsCrackNumber(graphString);
+
+            //mark as hewen or chongwen
+        if(markup & (GraphTranscription::HEWEN_LEFT | GraphTranscription::HEWEN_RIGHT
+                     | GraphTranscription::CHONGWEN_LEFT | GraphTranscription::CHONGWEN_RIGHT))
+            markAsHewen(graphString);
+
+        //mark unusual form
+        if(markup & GraphTranscription::FORM_UNUSUAL)
+            markAsUnusual(graphString);
+
+        //mark current
         if(index == i)
             markAsCurrent(graphString);
+
+        //make as editorial restoration
+        if(markup & GraphTranscription::EDS_RESTORATION)
+            markAsEdsRestoration(graphString, i);
+
         inscrString += graphString;
     }
     if(index>=0)
@@ -48,8 +74,46 @@ background-color
 color
 background-image
 text-decoration > none | [ underline || overline || line-through ]
-
 */
+
+void InscriptionTranscription::markAsUncertain(QString& graphString) const
+{
+    graphString.prepend("<style type=\"text/css\">.uncertain {color: #FF0000;}</style><span class=\"uncertain\">");
+    graphString.append("</span>");
+}
+
+void InscriptionTranscription::markAsCrackNumber(QString& graphString) const
+{
+    graphString.prepend("<style type=\"text/css\">.crack {background-color: #FFFF00;}</style><span class=\"crack\">");
+    graphString.append("</span>");
+}
+
+void InscriptionTranscription::markAsEdsRestoration(QString& graphString, int index) const
+{
+    static bool begun = false;
+    if(!begun) //prepend "["
+    {
+        graphString.prepend("[");
+        begun = true;
+    }
+    if (index == count() - 1 || ((at(index+1).getMarkup() & GraphTranscription::EDS_RESTORATION) == false))
+    {
+        graphString.append("]");
+        begun = false;
+    }
+}
+
+void InscriptionTranscription::markAsHewen(QString& graphString) const
+{
+    graphString.prepend("<style type=\"text/css\">.hewen {text-decoration: underline;}</style><span class=\"hewen\">");
+    graphString.append("</span>");
+}
+
+void InscriptionTranscription::markAsUnusual(QString& graphString) const
+{
+    graphString.prepend("<style type=\"text/css\">.unusual {text-decoration: overline;}</style><span class=\"unusual\">");
+    graphString.append("</span>");
+}
 
 void InscriptionTranscription::markAsCurrent(QString& graphString) const
 {

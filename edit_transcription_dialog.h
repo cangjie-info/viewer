@@ -39,6 +39,8 @@ private:
     //methods
     void refreshTrans(); //sets text in transLabel
     void refreshGraph(); //sets graph image, or "no image", or ""
+    void processGraph(QString inputString);
+    void processCommand(QString inputString);
     //funtions to set up UI
     void createActions();
     void createMenus();

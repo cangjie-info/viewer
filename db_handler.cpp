@@ -62,6 +62,12 @@ bool DbHandler::previousSurface()
     }
 }
 
+void DbHandler::moveToSurf(int index)
+{
+    if(!pCorpusQuery->seek(index))
+        pCorpusQuery->first();
+}
+
 int DbHandler::getCorpusSize() const
 {
     if(pCorpusQuery)
@@ -78,6 +84,11 @@ int DbHandler::getPositionInCorpus() const
     //or QSql::AfterLastRow, which are special negative values.>>
     else
         return -1; //if corpus has not been set
+}
+
+int DbHandler::getCurrentSurfaceId() const //returns ec.surfaces.id
+{
+    return pCorpusQuery->value(0).toInt();
 }
 
 void DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) const
@@ -429,4 +440,59 @@ void DbHandler::getGraphImage(QImage& graphImage, const int graphId, const int s
     //adjust to size
         graphImage = graphImage.scaled(QSize(size, size), Qt::KeepAspectRatio);
     }
+}
+
+void DbHandler::fixCracks()
+{
+    //select all graphs "." or numerals
+    QString queryString = "SELECT id, inscriptionId, graphNumber, graphemeId "
+                          "FROM inscriptionGraphs "
+                          "WHERE (graphemeId>=718 "
+                          "AND graphemeId<=727) "
+                          "OR graphemeId=1001 "
+                          "ORDER BY inscriptionId, graphNumber;";
+    QSqlQuery query;
+    query.exec(queryString);
+    int previousInscriptionId = 0;
+    int previousGraphNumber = 0;
+    int previousGraphemeId = 0;
+
+    int currentGraphId = 0;
+    int currentInscriptionId = 0;
+    int currentGraphNumber = 0;
+    int currentGraphemeId = 0;
+	 int adjustment = 0;
+    while(query.next())
+    {
+        currentGraphId = query.value(0).toInt();
+        currentInscriptionId = query.value(1).toInt();
+        currentGraphNumber = query.value(2).toInt();
+        currentGraphemeId = query.value(3).toInt();
+        if(previousInscriptionId == currentInscriptionId
+           && previousGraphNumber + 1 == currentGraphNumber
+           && previousGraphemeId == 1001)
+        {
+					adjustment++;
+            QString updateQueryString = QString("UPDATE inscriptionGraphs "
+                                        "SET markup = markup | %1 , graphNumber = %2 "
+                                        "WHERE id = %3;")
+                    .arg(GraphTranscription::CRACK_NUMBER)
+                    .arg(previousGraphNumber - adjustment)
+                    .arg(currentGraphId);
+            QSqlQuery updateQuery;
+            updateQuery.exec(updateQueryString);
+
+            qDebug() << currentGraphId;
+        }
+		  if(previousInscriptionId != currentInscriptionId)
+		  	adjustment = 0;
+        previousInscriptionId = currentInscriptionId;
+        previousGraphNumber = currentGraphNumber;
+        previousGraphemeId = currentGraphemeId;
+    }
+
+    QString deleteQueryString = "DELETE inscriptionGraphs "
+                        "WHERE graphemeId = 1001;";
+    QSqlQuery deleteQuery;
+    deleteQuery.exec(deleteQueryString);
 }

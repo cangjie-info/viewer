@@ -17,6 +17,7 @@
 #include "image_label.h"
 #include "surface_transcription.h"
 #include "transcription_window.h"
+#include "config_handler.h"
 
 class Viewer : public QMainWindow
 {
@@ -51,6 +52,7 @@ private:
     //connects up signals and slots
     //updates status bar
     //functions to set up UI
+    void closeEvent(QCloseEvent *event);
     void createActions();
     void createMenus();
     //actions
@@ -103,8 +105,10 @@ private:
     QMenu* viewMenu;
 
     //private data members
+    ConfigHandler* config; //handles interaction with configuration file
     ImageLabel* imageLabel; //widget that holds and manipulates the image being viewed
     DbHandler db; //handles all SQL queries and other interaction with ec db
+        //TODO: reimplement as namespace
     QScrollArea* imgScrollArea; //provides scroll bars for large imageLabel
     QScrollArea* transScrollArea; //provides scroll bars for the transcriptions list
     SurfaceImgs surf; //complete representation of inscribed surface
