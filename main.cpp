@@ -15,8 +15,8 @@ int main(int argc, char** argv)
 	Viewer viewer;
 	viewer.show();
 
-//        GraphViewer gv;
-//        gv.show();
+       GraphViewer gv;
+        gv.show();
 
 	return app.exec(); 
 }

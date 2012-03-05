@@ -99,6 +99,10 @@ void DbHandler::readSurface(SurfaceImgs& surf, SurfaceTranscription& trans) cons
 
     QString currentSurfId = pCorpusQuery->value(0).toString();
     //Query ec.surfaces
+//***************
+//TODO - publicationId changes from string to int.
+// need JOIN with publicaitons table
+//***************
     QString surfaceQueryString(
             "SELECT imageFile, x1, y1, x2, y2, rotation, publicationId, pubNumber, surfaceType FROM surfaces WHERE id=");
     surfaceQueryString += currentSurfId;
@@ -213,6 +217,7 @@ db.transaction(); //begin transaction
     QSqlQuery inscriptionDeleteQuery;
     if(!inscriptionDeleteQuery.exec(inscriptionDeleteString))
     {
+        qDebug() << inscriptionDeleteQuery.lastError().text();
     db.rollback();
         return;
     }
