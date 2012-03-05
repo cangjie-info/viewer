@@ -208,6 +208,8 @@ db.transaction(); //begin transaction
     //*** DELETE OLD INSCRIPTIONS AND GRAPHS ***//
 
     //DELETE query for corresponding inscriptions and graphs
+            //NB the two tables in the query are now related
+            //relation is set to CASCADE DELETE - does the query require modifcation?
     QString inscriptionDeleteString = QString(
             "DELETE inscriptions, inscriptionGraphs "
             "FROM inscriptions LEFT JOIN inscriptionGraphs "
