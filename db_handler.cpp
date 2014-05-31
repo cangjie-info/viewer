@@ -30,7 +30,7 @@ bool DbHandler::connect()
 bool DbHandler::setCorpus()
 {
     pCorpusQuery = new QSqlQuery();
-    pCorpusQuery->exec("SELECT id FROM surfaces;");
+    pCorpusQuery->exec("SELECT id FROM surfaces WHERE publicationId!=108 ORDER BY pubNumber;");
     if(pCorpusQuery->size() > 0)
     {
         qDebug() << pCorpusQuery->size() << "rows in the query result";
