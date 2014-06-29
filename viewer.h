@@ -95,7 +95,6 @@ private:
     QAction* editTranscriptionAction; //opens dialog window for editing a single insciption
     QAction* copyTransAction; //duplicates current inscription transcription and
         //inserts it at current index
-
             //TODO QAction* setCorpus; //sets WHERE clause for querying surfaces table
             //menus
             QMenu* fileMenu;

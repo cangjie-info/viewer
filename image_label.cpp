@@ -23,7 +23,7 @@ void ImageLabel::newSurf()
 {
     hide();
     QString imageFile = surf->getImageFile();
-    imageFile.prepend("/home/ads/repository/text_imgs/");
+    imageFile.prepend("/home/ads/ecdb/repository/text_imgs/");
     originalImage = QImage(imageFile); // load image file from disk.
     currentImage = originalImage;
     currentBoxIndex=0; //in SURFACE mode, so this is the only possible value

@@ -30,7 +30,7 @@ bool DbHandler::connect()
 bool DbHandler::setCorpus()
 {
     pCorpusQuery = new QSqlQuery();
-    pCorpusQuery->exec("SELECT id FROM surfaces WHERE publicationId!=108 ORDER BY pubNumber;");
+    pCorpusQuery->exec("SELECT id FROM surfaces WHERE publicationId=108 ORDER BY pubNumber;");
     if(pCorpusQuery->size() > 0)
     {
         qDebug() << pCorpusQuery->size() << "rows in the query result";
@@ -422,7 +422,7 @@ void DbHandler::getGraphImage(QImage& graphImage, const int graphId, const int s
     {
         //get image file
         QString fileName = query.value(0).toString();
-        fileName.prepend("/home/ads/repository/text_imgs/");
+        fileName.prepend("/home/ads/ecdb/repository/text_imgs/");
         QImage image = QImage(fileName);
         QImage surfaceImage;
     //make surface image
