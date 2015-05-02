@@ -38,6 +38,7 @@ void GraphViewer::processInput()
             pixmap.convertFromImage(graphImage);
             QLabel* label = new QLabel(this);
             label->setPixmap(pixmap);
+            label->setStyleSheet("border: 2px solid red");
             mainLayout->addWidget(label);
             label->show();
             labelList << label;
